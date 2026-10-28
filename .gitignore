@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+TestResults/
+*.user
+*.suo
+nightly/.lock
+quellen/
+*.dll
+*.pdf
+nightly/
