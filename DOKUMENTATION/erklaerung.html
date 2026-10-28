@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPE-Quadrocopter — Programmerläuterung</title>
+<style>
+  :root{
+    --blau:#1d3a5f; --akzent:#2e6da4; --grau:#5a6673; --hell:#eef3f8;
+    --linie:#c9d4e0; --warn:#8f1d1d; --gruen:#1b6b2f;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:"Segoe UI",Arial,Helvetica,sans-serif;
+    color:#24313f; background:#fbfcfe; margin:0; line-height:1.55;
+  }
+  .seite{max-width:960px;margin:0 auto;padding:28px 34px 60px}
+  header{border-bottom:3px solid var(--blau);padding-bottom:14px;margin-bottom:26px}
+  header h1{color:var(--blau);font-size:26px;margin:0 0 4px}
+  header .untertitel{color:var(--grau);font-size:14px}
+  h2{color:var(--blau);font-size:20px;margin:38px 0 10px;border-bottom:1px solid var(--linie);padding-bottom:4px}
+  h2 .id{font-size:12px;color:var(--grau);font-weight:normal}
+  h3{color:var(--akzent);font-size:16px;margin:22px 0 6px}
+  p{margin:8px 0}
+  ul,ol{margin:8px 0 8px 22px;padding:0}
+  li{margin:3px 0}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}
+  th,td{border:1px solid var(--linie);padding:6px 9px;text-align:left;vertical-align:top}
+  th{background:var(--hell);color:var(--blau)}
+  code,.mono{font-family:Consolas,"Courier New",monospace;font-size:13px;background:var(--hell);padding:1px 5px;border-radius:3px}
+  pre{background:#f2f5f9;border:1px solid var(--linie);border-left:4px solid var(--akzent);
+      padding:10px 14px;overflow-x:auto;font-size:13px;border-radius:3px}
+  pre code{background:none;padding:0}
+  .hinweis{background:#fff8e6;border:1px solid #e6cf8a;border-left:4px solid #c9a227;
+           padding:10px 14px;margin:14px 0;border-radius:3px;font-size:14px}
+  .gefahr{background:#fdf0ef;border:1px solid #e0b4b0;border-left:4px solid var(--warn);
+          padding:10px 14px;margin:14px 0;border-radius:3px;font-size:14px}
+  .abbildung{margin:18px 0;text-align:center}
+  .abbildung svg{width:100%;height:auto;background:#fff;border:1px solid var(--linie);border-radius:4px}
+  .abbildung .bildtext{font-size:13px;color:var(--grau);margin-top:6px}
+  nav{background:var(--hell);border:1px solid var(--linie);border-radius:4px;padding:14px 20px;margin:0 0 8px}
+  nav b{color:var(--blau)}
+  nav ol{columns:2;margin:6px 0 0 20px}
+  nav a{color:var(--akzent);text-decoration:none}
+  nav a:hover{text-decoration:underline}
+  .fusszeile{margin-top:44px;border-top:1px solid var(--linie);padding-top:10px;color:var(--grau);font-size:12.5px}
+  .klein{font-size:13px;color:var(--grau)}
+  .led{display:inline-block;width:13px;height:13px;border-radius:50%;vertical-align:-2px;border:1px solid #888}
+  .led.gruen{background:#39b54a}
+  .led.aus{background:#d9d9d9}
+  @media print{ .seite{padding:10mm} body{background:#fff} nav{display:none} }
+</style>
+</head>
+<body>
+<div class="seite">
+
+<header>
+  <h1>Steuerungsapplikation für den IPE-Quadrocopter</h1>
+  <div class="untertitel">
+    Interdisziplinäre Produktentwicklung &middot; Programmierung (C#/WPF) &middot;
+    Programmerläuterung für den Beleg (Abschnitt Software: Programmaufbau, Steuerungskonzept, Abläufe, Sicherheit)
+  </div>
+</header>
+
+<nav>
+  <b>Inhalt</b>
+  <ol>
+    <li><a href="#ziel">Zielsetzung und Gesamtblick</a></li>
+    <li><a href="#architektur">Systemarchitektur</a></li>
+    <li><a href="#aufbau">Projektaufbau der Lösung</a></li>
+    <li><a href="#uavtalk">UAVTalk-Protokoll</a></li>
+    <li><a href="#objekte">Die drei UAVObjects</a></li>
+    <li><a href="#ablauf">Kommunikationsablauf: Handshake und Heartbeat</a></li>
+    <li><a href="#arming">Arming und Disarming</a></li>
+    <li><a href="#gui">Grafische Benutzeroberfläche</a></li>
+    <li><a href="#threads">Thread-Struktur</a></li>
+    <li><a href="#zustand">Kommunikations-Zustandsmaschine</a></li>
+    <li><a href="#sicherheit">Sicherheitsfeatures</a></li>
+    <li><a href="#test">Testumgebung und Vorgehensweise</a></li>
+  </ol>
+</nav>
+
+<!-- ================= 1 ZIEL ================= -->
+<h2 id="ziel">1. Zielsetzung und Gesamtblick</h2>
+<p>
+Die Software steuert den Quadrocopter des Lehrstuhls (Flugcontroller <b>CC3D Revolution</b>
+mit <b>LibrePilot</b>-Firmware, Funkstrecke über <b>OPLink Mini</b>) von einem
+Windows-Laptop aus. Die Eingabe erfolgt über einen <b>Xbox-360-Controller</b>
+per USB; die Befehle werden in <b>UAVTalk</b>-Nachrichten (standardisierte
+Bytefolgen) umgewandelt und über die vom Lehrstuhl gestellte
+Funktionsbibliothek an den Flightcontroller gesendet (PROG-005/006/007).
+</p>
+<p>
+Entsprechend der Aufgabenstellung gibt es <b>zwei Programme</b> (B1), die sich
+eine gemeinsame Bibliothek für die gesamte Logik teilen:
+</p>
+<table>
+  <tr><th></th><th>Programm 1 — QuadroControl.Virtuell</th><th>Programm 2 — QuadroControl.Real</th></tr>
+  <tr>
+    <td><b>Gegenstelle</b></td>
+    <td>virtuelle Testumgebung des Lehrstuhls (+ Unity-Demonstrator <span class="mono">Quadrocopter.exe</span>)</td>
+    <td>realer Quadrocopter über COM-Port / OPLink</td>
+  </tr>
+  <tr>
+    <td><b>Bibliothek (PROG-007)</b></td>
+    <td><span class="mono">vKTCQuadroControl.dll</span> (Vorlagen-Delegat <span class="mono">vSchickeHexString</span>, Block „NICHT ÄNDERN“)</td>
+    <td><span class="mono">KTCQuadroControl.dll</span> (<span class="mono">Verbinde</span>, <span class="mono">SchickeHexString</span>, <span class="mono">KonvertiereFloatZuHexString</span>, <span class="mono">HoleAktuelleCOMPorts</span>)</td>
+  </tr>
+  <tr>
+    <td><b>Zweck</b></td>
+    <td>sicheres Entwickeln und Erproben ohne Flugrisiko (E7: „Testumgebung zuerst“)</td>
+    <td>tatsächlicher Flugbetrieb (Testflüge CADE/CAVE)</td>
+  </tr>
+</table>
+
+<!-- ================= 2 ARCHITEKTUR ================= -->
+<h2 id="architektur">2. Systemarchitektur</h2>
+<p>
+Die Signalkette vom Controller bis zu den Motoren — die Software ist der
+linke Block; sämtliche Funkverbindung übernimmt die vorgegebene Hardware:
+</p>
+<div class="abbildung">
+<svg viewBox="0 0 920 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Signalkette vom Controller zum Quadrocopter">
+  <defs>
+    <marker id="pfeil" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e6da4"/>
+    </marker>
+  </defs>
+  <!-- Xbox -->
+  <rect x="10" y="45" width="140" height="70" rx="8" fill="#eef3f8" stroke="#1d3a5f"/>
+  <text x="80" y="74" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d3a5f">Xbox-360-</text>
+  <text x="80" y="92" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d3a5f">Controller (USB)</text>
+  <!-- PC -->
+  <rect x="190" y="30" width="270" height="100" rx="8" fill="#e8f0f8" stroke="#1d3a5f" stroke-width="1.5"/>
+  <text x="325" y="52" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d3a5f">Steuerungsprogramm (WPF, C#)</text>
+  <text x="325" y="72" text-anchor="middle" font-size="12" fill="#24313f">GUI · Threads · Logikkern (UAVTalk)</text>
+  <text x="325" y="90" text-anchor="middle" font-size="12" fill="#24313f">Programm 1: virtuelle Testumgebung</text>
+  <text x="325" y="106" text-anchor="middle" font-size="12" fill="#24313f">Programm 2: realer Quadrocopter</text>
+  <!-- DLL -->
+  <rect x="500" y="30" width="180" height="100" rx="8" fill="#fdf6e8" stroke="#b08a2a"/>
+  <text x="590" y="52" text-anchor="middle" font-size="13" font-weight="bold" fill="#7a5c12">Kurs-DLL</text>
+  <text x="590" y="72" text-anchor="middle" font-size="12" fill="#24313f">SchickeHexString()</text>
+  <text x="590" y="88" text-anchor="middle" font-size="12" fill="#24313f">hängt CRC-8 an,</text>
+  <text x="590" y="104" text-anchor="middle" font-size="12" fill="#24313f">sendet seriell</text>
+  <!-- COM -->
+  <rect x="720" y="45" width="90" height="70" rx="8" fill="#eef3f8" stroke="#1d3a5f"/>
+  <text x="765" y="74" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d3a5f">COM-Port /</text>
+  <text x="765" y="92" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d3a5f">OPLink 433 MHz</text>
+  <!-- FC -->
+  <rect x="620" y="150" width="200" height="34" rx="8" fill="#e8f0f8" stroke="#1d3a5f"/>
+  <text x="720" y="172" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d3a5f">Flightcontroller CC3D Revolution (LibrePilot)</text>
+  <!-- Pfeile -->
+  <line x1="150" y1="80" x2="186" y2="80" stroke="#2e6da4" stroke-width="2" marker-end="url(#pfeil)"/>
+  <line x1="460" y1="80" x2="496" y2="80" stroke="#2e6da4" stroke-width="2" marker-end="url(#pfeil)"/>
+  <line x1="680" y1="80" x2="716" y2="80" stroke="#2e6da4" stroke-width="2" marker-end="url(#pfeil)"/>
+  <line x1="765" y1="115" x2="765" y2="146" stroke="#2e6da4" stroke-width="2" marker-end="url(#pfeil)"/>
+  <text x="168" y="72" text-anchor="middle" font-size="11" fill="#5a6673">Sticks/</text>
+  <text x="168" y="98" text-anchor="middle" font-size="11" fill="#5a6673">Tasten</text>
+</svg>
+<div class="bildtext">Abbildung 1: Signalkette — der PC wandelt Sticksignale in UAVTalk-Nachrichten um (VL5, Komponenten des Gesamtsystems).</div>
+</div>
+<p class="klein">
+Wichtig (B3): Das Steuerprogramm spricht UAVTalk <i>selbst</i> über die
+Kurs-Bibliothek — die Kommunikation läuft nicht über LibrePilot-Middleware.
+Die CRC-8-Prüfsumme jeder Nachricht wird automatisch von der DLL angehängt;
+die Applikation berechnet niemals selbst eine Prüfsumme.
+</p>
+
+<!-- ================= 3 AUFBAU ================= -->
+<h2 id="aufbau">3. Projektaufbau der Lösung <span class="id">(Programmaufbau, C4)</span></h2>
+<p>
+Die Visual-Studio-Lösung <span class="mono">IPE-Quadrocopter.sln</span> enthält
+vier Projekte. Der gesamte „Verstand“ der Anwendung liegt in der
+Klassenbibliothek <b>QuadroControl.Core</b> — sie kennt weder die Kurs-DLLs
+noch WPF und ist deshalb vollständig automatisiert testbar (79 Unit-Tests).
+Beide WPF-Programme unterscheiden sich nur noch durch den jeweiligen
+DLL-Adapter und die Fenster-Caption-Details:
+</p>
+<table>
+  <tr><th>Projekt</th><th>Inhalt</th><th>Typ / Framework</th></tr>
+  <tr>
+    <td><span class="mono">QuadroControl.Core</span></td>
+    <td>UAVTalk-Erzeugung (<span class="mono">UavTalkBuilder</span>, <span class="mono">FloatHex</span>, Payload-Klassen), <span class="mono">MessageFactory</span>, Handshake/Heartbeat, Zustandsmaschine, Controller-Mapping, Sicherheitslogik, Konfiguration (<span class="mono">QuadroConfig</span>)</td>
+    <td>Klassenbibliothek, netstandard2.0 + net452</td>
+  </tr>
+  <tr>
+    <td><span class="mono">QuadroControl.Virtuell</span></td>
+    <td>WPF-GUI, Threads, Transport-Adapter <span class="mono">VirtuellQuadroTransport</span> auf <span class="mono">vKTCQuadroControl</span> (inkl. Vorlagen-Delegat „NICHT ÄNDERN“)</td>
+    <td>WPF-Anwendung, .NET Framework 4.5.2</td>
+  </tr>
+  <tr>
+    <td><span class="mono">QuadroControl.Real</span></td>
+    <td>WPF-GUI, Threads, Transport-Adapter <span class="mono">RealQuadroTransport</span> auf <span class="mono">KTCQuadroControl</span> (inkl. <span class="mono">HoleAktuelleCOMPorts</span>, <span class="mono">KonvertiereFloatZuHexString</span>)</td>
+    <td>WPF-Anwendung, .NET Framework 4.5.2</td>
+  </tr>
+  <tr>
+    <td><span class="mono">QuadroControl.Core.Tests</span></td>
+    <td>xunit-Tests: bekannte Byte-Vektoren, Feldreihenfolge, Handshake-Sequenz, Zustandsmaschine, Sicherheitslogik</td>
+    <td>Testprojekt, net8.0 — <b>79 Tests, alle bestanden</b></td>
+  </tr>
+</table>
+<p class="klein">
+Weitergehende Darstellung: Klassendiagramm in <span class="mono">docs/klassendiagramm.md</span>,
+Programmablaufpläne in <span class="mono">docs/programmablaufplan.md</span>
+(Beleg C6/C7).
+</p>
+
+<!-- ================= 4 UAVTALK ================= -->
+<h2 id="uavtalk">4. UAVTalk-Protokoll <span class="id">(VL5, E1)</span></h2>
+<p>
+UAVTalk ist das binäre Telegrammformat von LibrePilot. Jede Nachricht besteht
+aus einem festen Rahmen; alle Zahlenwerte werden im <b>Little-Endian</b>-Format
+übertragen (niederwertiges Byte zuerst). Die Länge zählt Kopf- und Datenbytes
+<b>ohne</b> Prüfsumme:
+</p>
+<div class="abbildung">
+<svg viewBox="0 0 920 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aufbau einer UAVTalk-Nachricht">
+  <!-- Segmente -->
+  <g font-size="12" fill="#24313f">
+    <rect x="12"  y="46" width="88"  height="40" fill="#eef3f8" stroke="#1d3a5f"/>
+    <rect x="100" y="46" width="88"  height="40" fill="#eef3f8" stroke="#1d3a5f"/>
+    <rect x="188" y="46" width="110" height="40" fill="#eef3f8" stroke="#1d3a5f"/>
+    <rect x="298" y="46" width="140" height="40" fill="#eef3f8" stroke="#1d3a5f"/>
+    <rect x="438" y="46" width="110" height="40" fill="#eef3f8" stroke="#1d3a5f"/>
+    <rect x="548" y="46" width="230" height="40" fill="#e8f0f8" stroke="#1d3a5f" stroke-width="1.5"/>
+    <rect x="778" y="46" width="130" height="40" fill="#fdf0ef" stroke="#8f1d1d" stroke-dasharray="5 3"/>
+  </g>
+  <g text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1d3a5f">
+    <text x="56"  y="64">A: Sync</text>
+    <text x="144" y="64">B: Type</text>
+    <text x="243" y="64">C: Length</text>
+    <text x="368" y="64">D: ObjectID</text>
+    <text x="493" y="64">E: Instanz</text>
+    <text x="663" y="64">F: Daten (Payload)</text>
+    <text x="843" y="64" fill="#8f1d1d">G: CRC-8</text>
+  </g>
+  <g text-anchor="middle" font-size="11.5" fill="#5a6673">
+    <text x="56"  y="80">1 B — 3C</text>
+    <text x="144" y="80">1 B — 20</text>
+    <text x="243" y="80">2 B — LE</text>
+    <text x="368" y="80">4 B — byte-verdreht</text>
+    <text x="493" y="80">2 B — 00 00</text>
+    <text x="663" y="80">alle Felder, feste Reihenfolge</text>
+    <text x="843" y="80" fill="#8f1d1d">hängt die DLL an</text>
+  </g>
+  <g text-anchor="start" font-size="11.5" fill="#5a6673">
+    <text x="12" y="115">Das Steuerprogramm baut die Segmente A–F und schickt den Hex-String an</text>
+    <text x="12" y="132">SchickeHexString(); die Prüfsumme (G) berechnet und anhängt ausschließlich die Kurs-DLL.</text>
+  </g>
+</svg>
+<div class="bildtext">Abbildung 2: Felder A–F einer UAVTalk-Nachricht (Message-Type 0x20 = Objektdatenübertragung); Feld G übernimmt die Kurs-DLL.</div>
+</div>
+<h3>Beispiel: Zahlwerte im Little-Endian-Format</h3>
+<p>
+Ein <span class="mono">float32</span> wird als IEEE-754-Bitfolge gesendet,
+niederwertigstes Byte zuerst — identisch zur DLL-Funktion
+<span class="mono">KonvertiereFloatZuHexString</span>:
+</p>
+<pre><code>1.0f  →  00 00 80 3F      -1.0f  →  00 00 80 BF      0.0f  →  00 00 00 00</code></pre>
+<p>
+Komplette Nachricht für <span class="mono">AccessoryDesired = 1</span> (Arming)
+— 14 Bytes, ohne Prüfsumme:
+</p>
+<pre><code>3C 20 0E 00 5A 98 09 C4 00 00 00 00 80 3F
+│  │  │──│  │───────│  │──│  │──────│ └ float 1.0 (Little Endian)
+│  │  └ Length 14   └ ObjectID   └ Instanz 0
+│  └ Type 0x20        C4 09 98 5A verdreht: 5A 98 09 C4
+└ Sync 3C</code></pre>
+
+<!-- ================= 5 OBJEKTE ================= -->
+<h2 id="objekte">5. Die drei UAVObjects der Anwendung <span class="id">(VL5, ObjectID-Tabelle)</span></h2>
+<table>
+  <tr><th>UAVObject</th><th>ObjectID<br/>(Tabellen-Schreibweise)</th><th>Aufbau des Datenabschnitts</th><th>Aufgabe</th></tr>
+  <tr>
+    <td><span class="mono">ManualControlCommand</span></td>
+    <td><span class="mono">C4 10 74 80</span></td>
+    <td>46 Bytes: Throttle, Roll, Pitch, Yaw, Collective(=0), Thrust(=Throttle) je float32; Channel int16[10] (=0); Connected (1 Byte); FlightModeSwitchPosition (1 Byte, =0)</td>
+    <td>Steuerbefehle an den FC — <b>alle 9 Felder immer senden</b>, feste Reihenfolge (E2)</td>
+  </tr>
+  <tr>
+    <td><span class="mono">AccessoryDesired</span></td>
+    <td><span class="mono">C4 09 98 5A</span></td>
+    <td>4 Bytes: AccessoryVal als float32 (Wert +1 bzw. −1)</td>
+    <td>„Schalter“: +1 = Arming, −1 = Disarming</td>
+  </tr>
+  <tr>
+    <td><span class="mono">GCSTelemetryStats</span></td>
+    <td><span class="mono">CA D1 DC 0A</span></td>
+    <td>37 Bytes: 36 Zähler-Bytes (=0) + Status-Byte (0x00, 0x01, 0x03)</td>
+    <td>aktiviert die UAVTalk-Schnittstelle am FC: Handshake-Schritte und Heartbeat</td>
+  </tr>
+</table>
+<p class="klein">
+Im Nachrichtenkopf steht die ObjectID byte-verdreht (Little Endian), z.&nbsp;B.
+<span class="mono">80 74 10 C4</span> für ManualControlCommand — das übernimmt
+der <span class="mono">UavTalkBuilder</span> automatisch. Ein vollständiger
+Steuerbefehl hat die Länge 56 (0x0038), ein Handshake-/Heartbeat-Paket 47 (0x002F).
+</p>
+
+<!-- ================= 6 ABLAUF ================= -->
+<h2 id="ablauf">6. Kommunikationsablauf: Handshake und Heartbeat <span class="id">(VL5 Folie 37 ff., E3/E4)</span></h2>
+<p>
+Nach dem Öffnen des COM-Ports wird der Flightcontroller mit genau <b>fünf
+Nachrichten</b> initialisiert; danach hält der <b>Heartbeat</b> die Verbindung
+lebendig — eine Nachricht pro Sekunde aus einem eigenen Thread:
+</p>
+<div class="abbildung">
+<svg viewBox="0 0 880 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sequenzdiagramm Handshake und Heartbeat">
+  <defs>
+    <marker id="seq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d3a5f"/>
+    </marker>
+  </defs>
+  <!-- Akteure -->
+  <rect x="170" y="10" width="220" height="34" rx="6" fill="#e8f0f8" stroke="#1d3a5f"/>
+  <text x="280" y="32" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d3a5f">Steuerprogramm (GCS)</text>
+  <rect x="490" y="10" width="220" height="34" rx="6" fill="#e8f0f8" stroke="#1d3a5f"/>
+  <text x="600" y="32" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d3a5f">Flightcontroller / Testumgebung</text>
+  <line x1="280" y1="44" x2="280" y2="452" stroke="#5a6673" stroke-dasharray="4 4"/>
+  <line x1="600" y1="44" x2="600" y2="452" stroke="#5a6673" stroke-dasharray="4 4"/>
+  <!-- Schritt 0 -->
+  <text x="440" y="70" text-anchor="middle" font-size="12" fill="#5a6673">zuvor: Verbinde(COMx) — COM-Port öffnen</text>
+  <!-- 1 -->
+  <line x1="280" y1="95" x2="600" y2="95" stroke="#1d3a5f" stroke-width="1.6" marker-end="url(#seq)"/>
+  <text x="290" y="88" font-size="12" fill="#24313f"><tspan font-weight="bold">1</tspan>  GCSTelemetryStats Status 00 (Disconnected)</text>
+  <!-- 2 -->
+  <line x1="280" y1="130" x2="600" y2="130" stroke="#1d3a5f" stroke-width="1.6" marker-end="url(#seq)"/>
+  <text x="290" y="123" font-size="12" fill="#24313f"><tspan font-weight="bold">2</tspan>  GCSTelemetryStats Status 01 (Handshake angefordert)</text>
+  <!-- 3 -->
+  <line x1="280" y1="165" x2="600" y2="165" stroke="#1d3a5f" stroke-width="1.6" marker-end="url(#seq)"/>
+  <text x="290" y="158" font-size="12" fill="#24313f"><tspan font-weight="bold">3</tspan>  GCSTelemetryStats Status 03 (verbunden)</text>
+  <!-- 4 -->
+  <line x1="280" y1="200" x2="600" y2="200" stroke="#1d3a5f" stroke-width="1.6" marker-end="url(#seq)"/>
+  <text x="290" y="193" font-size="12" fill="#24313f"><tspan font-weight="bold">4</tspan>  Metadaten ManualControlCommand (VL5, wortwörtlich)</text>
+  <!-- 5 -->
+  <line x1="280" y1="235" x2="600" y2="235" stroke="#1d3a5f" stroke-width="1.6" marker-end="url(#seq)"/>
+  <text x="290" y="228" font-size="12" fill="#24313f"><tspan font-weight="bold">5</tspan>  Metadaten AccessoryDesired (VL5, wortwörtlich)</text>
+  <!-- Rahmen -->
+  <rect x="240" y="72" width="400" height="176" rx="8" fill="none" stroke="#2e6da4" stroke-dasharray="6 4"/>
+  <text x="440" y="266" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#2e6da4">Handshake — genau diese 5 Nachrichten in dieser Reihenfolge</text>
+  <text x="440" y="283" text-anchor="middle" font-size="11.5" fill="#5a6673">danach: Zustand „Heartbeat aktiv“, Steuerbefehle erlaubt</text>
+  <!-- Heartbeat-Schleife -->
+  <rect x="240" y="300" width="400" height="120" rx="8" fill="#f3f8f3" stroke="#1b6b2f" stroke-dasharray="6 4"/>
+  <text x="440" y="322" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1b6b2f">Heartbeat-Thread: alle 1 s</text>
+  <line x1="280" y1="345" x2="600" y2="345" stroke="#1b6b2f" stroke-width="1.6" marker-end="url(#seq)"/>
+  <text x="290" y="338" font-size="12" fill="#24313f">GCSTelemetryStats Status 03</text>
+  <line x1="280" y1="385" x2="600" y2="385" stroke="#1b6b2f" stroke-width="1.6" marker-end="url(#seq)"/>
+  <text x="290" y="378" font-size="12" fill="#24313f">GCSTelemetryStats Status 03</text>
+  <text x="440" y="410" text-anchor="middle" font-size="11.5" fill="#5a6673">… läuft parallel zum Controller-Thread, bis getrennt wird</text>
+</svg>
+<div class="bildtext">Abbildung 3: Kommunikationssequenz — 5-Handshake-Nachrichten, danach Heartbeat im Sekundentakt.</div>
+</div>
+<p>
+Die beiden Metadaten-Nachrichten (Schritte 4 und 5) sind im Projekt als
+unveränderliche Konstanten hinterlegt — byte-genau aus der Vorlesungsfolie
+übernommen (Kleinschreibung wie auf der Folie; die DLL parst Hex unabhängig
+von Groß-/Kleinschreibung):
+</p>
+<pre><code>3c 20 12 00 81 74 10 c4 00 00 41 00 c0 07 64 00 00 00   (Metadaten ManualControlCommand)
+3c 20 12 00 5c 98 09 c4 00 00 41 00 d0 07 64 00 00 00   (Metadaten AccessoryDesired)</code></pre>
+<p class="klein">
+Steuerbefehle (<span class="mono">ManualControlCommand</span> im Takt von ca.
+20 ms) dürfen erst gesendet werden, wenn der Handshake abgeschlossen ist —
+das erzwingt die Zustandsmaschine aus Abschnitt 10.
+</p>
+
+<!-- ================= 7 ARMING ================= -->
+<h2 id="arming">7. Arming und Disarming <span class="id">(VL5, E5, PROG-010)</span></h2>
+<p>
+Das Arming („Scharfschalten“ der Motoren) ist am Lehrstuhl-Setup zweistufig
+und wird im Flugbetrieb über die Controller-Tasten A (Arming) und B (Disarming)
+ausgelöst (UE4):
+</p>
+<table>
+  <tr><th>Schritt</th><th>Nachricht</th><th>Bemerkung</th></tr>
+  <tr>
+    <td>1. „Entsperren“ vorbereiten (5×)</td>
+    <td><span class="mono">ManualControlCommand</span> mit <b>Throttle = −1</b> und <b>Thrust = −1</b>, Rest neutrale Werte</td>
+    <td>mehrfach hintereinander schreiben (im Code: 5× im Abstand von 50 ms) — nur diese Kombination erlaubt das Arming</td>
+  </tr>
+  <tr>
+    <td>2. Arming</td>
+    <td><span class="mono">AccessoryDesired</span> mit <b>AccessoryVal = +1</b></td>
+    <td>Konfiguration im FC: „Arm airframe using throttle off and: Accessory 0“, Arming timeout = 0 s</td>
+  </tr>
+  <tr>
+    <td>Disarming</td>
+    <td><span class="mono">AccessoryDesired</span> mit <b>AccessoryVal = −1</b></td>
+    <td>oder automatisch bei Controller-Verlust (Abschnitt 11)</td>
+  </tr>
+</table>
+<p class="klein">
+Beide Sequenzen laufen nur im Zustand „Heartbeat aktiv“ bzw. „Armed“ — die
+Zustandsmaschine verhindert ein vorzeitiges oder doppeltes Arming.
+</p>
+
+<!-- ================= 8 GUI ================= -->
+<h2 id="gui">8. Grafische Benutzeroberfläche <span class="id">(PROG-008/008A, UE4 Folie 3)</span></h2>
+<p>
+Das Fenster folgt dem Zielprogramm aus der Übung 4: links die Bedienspalte für
+die Kommunikationssteuerung, rechts die Statusanzeigen, darunter die
+Controller-Ausgabe. Alle Kommunikationsschritte (Verbinden, Trennen,
+Handshake/Heartbeat, Arming) sind aus der GUI bedienbar (PROG-008A).
+</p>
+<div class="abbildung">
+<svg viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Skizze der GUI">
+  <!-- Fensterrahmen -->
+  <rect x="10" y="10" width="620" height="400" rx="6" fill="#ffffff" stroke="#5a6673" stroke-width="1.5"/>
+  <rect x="10" y="10" width="620" height="30" rx="6" fill="#e8edf3" stroke="#5a6673"/>
+  <text x="26" y="30" font-size="13" fill="#24313f">MainWindow</text>
+  <circle cx="594" cy="25" r="6" fill="#d9d9d9" stroke="#5a6673"/><circle cx="570" cy="25" r="6" fill="#d9d9d9" stroke="#5a6673"/><circle cx="546" cy="25" r="6" fill="#e0b4b0" stroke="#5a6673"/>
+  <!-- Kopfzeile -->
+  <text x="26" y="62" font-size="11.5" fill="#5a6673">QuadroControl — Programm 1: virtuelle Testumgebung / Programm 2: realer Quadrocopter</text>
+  <!-- Buttons links -->
+  <g font-size="12" fill="#24313f">
+    <rect x="26" y="80" width="200" height="30" rx="3" fill="#f0f0f0" stroke="#9aa5b1"/>
+    <text x="126" y="99" text-anchor="middle">COMPort verbinden</text>
+    <rect x="26" y="118" width="200" height="30" rx="3" fill="#f0f0f0" stroke="#9aa5b1"/>
+    <text x="126" y="137" text-anchor="middle">COMPort trennen</text>
+    <rect x="26" y="156" width="200" height="30" rx="3" fill="#f0f0f0" stroke="#9aa5b1"/>
+    <text x="126" y="175" text-anchor="middle">FC initialisieren und Heartbeat</text>
+    <rect x="26" y="216" width="200" height="30" rx="3" fill="#f0f0f0" stroke="#9aa5b1"/>
+    <text x="126" y="235" text-anchor="middle">Controller lesen</text>
+  </g>
+  <!-- COM + Verbindungsstatus -->
+  <text x="246" y="94" font-size="10.5" fill="#5a6673">COM-Port</text>
+  <rect x="246" y="98" width="86" height="24" rx="3" fill="#ffffff" stroke="#9aa5b1"/>
+  <text x="256" y="114" font-size="12" fill="#24313f">COM3</text>
+  <text x="352" y="94" font-size="10.5" fill="#5a6673">Verbindungsstatus</text>
+  <text x="352" y="114" font-size="12" font-weight="bold" fill="#24313f">Verbunden mit COM3 …</text>
+  <!-- Armingstatus -->
+  <text x="246" y="238" font-size="10.5" fill="#5a6673">Armingstatus</text>
+  <circle cx="258" cy="231" r="12" fill="#39b54a" stroke="#1b6b2f"/>
+  <text x="280" y="236" font-size="15" font-weight="bold" fill="#1b6b2f">Armed</text>
+  <!-- Controller-Ausgabe -->
+  <rect x="26" y="270" width="588" height="126" rx="4" fill="#f7f9fb" stroke="#c9d4e0"/>
+  <text x="40" y="292" font-size="12" font-weight="bold" fill="#1d3a5f">Controller-Ausgabe (Xbox-Controller)</text>
+  <text x="40" y="310" font-size="10.5" fill="#5a6673">Mode-2: links Y = Gas, links X = Gieren, rechts X = Rollen, rechts Y = Nicken — Taste A = Arming, Taste B = Disarming</text>
+  <g font-size="11" fill="#24313f">
+    <rect x="40"  y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="48" y="337">Links X (Yaw)</text>
+    <rect x="190" y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="198" y="337">Links Y (Gas)</text>
+    <rect x="340" y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="348" y="337">Rechts X (Roll)</text>
+    <rect x="490" y="322" width="110" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="498" y="337">Rechts Y (Pitch)</text>
+    <rect x="40"  y="354" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="48" y="369">LeftTrigger</text>
+    <rect x="190" y="354" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="198" y="369">Tasten</text>
+    <rect x="340" y="354" width="260" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="348" y="369">Gas als DLL-Hex (nur Programm 2)</text>
+  </g>
+</svg>
+<div class="bildtext">Abbildung 4: Aufbau des Fensters (hier im Zustand „Armed“). Programm 2 zeigt zusätzlich einen Sicherheitshinweis „nur propellerlos testen“.</div>
+</div>
+<h3>GUI-Elemente und ihre Namen (UE4)</h3>
+<table>
+  <tr><th>Name im Code</th><th>Element</th><th>Beschriftung / Inhalt</th><th>Funktion</th></tr>
+  <tr><td><span class="mono">TB_COMPort</span></td><td>TextBox</td><td>COMXY</td><td>Einstellung des COM-Ports (Programm 2 zusätzlich: Button „COM-Ports suchen“ via <span class="mono">HoleAktuelleCOMPorts</span>)</td></tr>
+  <tr><td><span class="mono">BT_COMPortVerbinde</span></td><td>Button</td><td>COMPort verbinden</td><td>öffnet die serielle Schnittstelle (Aufbau des seriellen Ports)</td></tr>
+  <tr><td><span class="mono">BT_COMPortTrennen</span></td><td>Button</td><td>COMPort trennen</td><td>sicheres Trennen (erst entwaffnen + Neutralbefehl, dann schließen)</td></tr>
+  <tr><td><span class="mono">BT_HS_HB</span></td><td>Button</td><td>FC initialisieren und Heartbeat</td><td>sendet die 5 Handshake-Nachrichten und startet den Heartbeat-Thread</td></tr>
+  <tr><td><span class="mono">BT_XBoxRead</span></td><td>Button</td><td>Controller lesen</td><td>startet/stoppt den Controller-Thread (Arming/Disarming über Tasten A/B)</td></tr>
+  <tr><td><span class="mono">Label_VerbindungStatus</span></td><td>Label</td><td>Verbindungsstatus</td><td>Darstellung des Verbindungsstatus (getrennt/verbunden/Heartbeat/Fehler)</td></tr>
+  <tr><td><span class="mono">Label_ArmingStatus</span> + LED</td><td>Label + Image</td><td>Armingstatus</td><td>Anzeige des Arming-Status (PROG-010A, siehe Abschnitt 11)</td></tr>
+  <tr><td><span class="mono">TB_AnalogLX/LY/RX/RY, TB_LeftTrigger, TB_ButtonA, TB_DLLHex</span></td><td>TextBoxen</td><td>Controller-Ausgabe</td><td>Live-Werte der Sticks/Trigger/Tasten; TB_DLLHex zeigt den Gaswert wie ihn die DLL-Funktion kodiert</td></tr>
+</table>
+
+<!-- ================= 9 THREADS ================= -->
+<h2 id="threads">9. Thread-Struktur <span class="id">(VL6, E6)</span></h2>
+<p>
+WPF erlaubt GUI-Zugriffe nur aus dem GUI-Thread. Die Anwendung arbeitet
+trotzdem mit drei parallel laufenden Aufgaben; Updates aus den Nebenthreads
+laufen ausschließlich über den Dispatcher mit einem Delegaten
+(<span class="mono">UpdateGUI</span>, Prüfung mit
+<span class="mono">Dispatcher.CheckAccess()</span>, sonst
+<span class="mono">BeginInvoke</span>) — direkte GUI-Zugriffe aus Threads
+würden eine <span class="mono">InvalidOperationException</span> auslösen:
+</p>
+<div class="abbildung">
+<svg viewBox="0 0 880 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Thread-Struktur">
+  <defs>
+    <marker id="th" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e6da4"/>
+    </marker>
+  </defs>
+  <!-- GUI-Thread -->
+  <rect x="150" y="20" width="710" height="52" rx="6" fill="#e8f0f8" stroke="#1d3a5f"/>
+  <rect x="10" y="30" width="130" height="32" rx="6" fill="#1d3a5f"/>
+  <text x="75" y="51" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#ffffff">GUI-Thread</text>
+  <text x="170" y="42" font-size="12" fill="#24313f">Fenster + Buttons; nimmt Updates entgegen, berechnet nichts Schweres, blockiert nie</text>
+  <text x="170" y="60" font-size="11.5" fill="#5a6673">UpdateGUI(values): Verbindung, Arming-Status, Achsenwerte, Tasten</text>
+  <!-- Controller-Thread -->
+  <rect x="150" y="100" width="710" height="52" rx="6" fill="#f3f6fa" stroke="#5a6673"/>
+  <rect x="10" y="110" width="130" height="32" rx="6" fill="#5a6673"/>
+  <text x="75" y="131" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#ffffff">Controller-Thread</text>
+  <text x="170" y="122" font-size="12" fill="#24313f">liest XBox.GetState(), bewertet SafetyMonitor, sendet ManualControlCommand (ca. alle 20 ms)</text>
+  <text x="170" y="140" font-size="11.5" fill="#5a6673">löst außerdem Arming (Taste A) und Disarming (Taste B) im passenden Zustand aus</text>
+  <!-- Heartbeat-Thread -->
+  <rect x="150" y="180" width="710" height="52" rx="6" fill="#f3f8f3" stroke="#1b6b2f"/>
+  <rect x="10" y="190" width="130" height="32" rx="6" fill="#1b6b2f"/>
+  <text x="75" y="211" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#ffffff">Heartbeat-Thread</text>
+  <text x="170" y="202" font-size="12" fill="#24313f">sendet jede Sekunde GCSTelemetryStats Status 03 (E4: eigene Thread-Zuständigkeit)</text>
+  <text x="170" y="220" font-size="11.5" fill="#5a6673">läuft erst nach abgeschlossenem Handshake</text>
+  <!-- Pfeile -->
+  <line x1="505" y1="100" x2="505" y2="76" stroke="#2e6da4" stroke-width="1.8" marker-end="url(#th)"/>
+  <line x1="505" y1="180" x2="505" y2="156" stroke="#2e6da4" stroke-width="1.8" marker-end="url(#th)"/>
+  <text x="515" y="93" font-size="11" fill="#2e6da4">Dispatcher.BeginInvoke(UpdateGUI)</text>
+  <text x="515" y="173" font-size="11" fill="#2e6da4">Dispatcher.BeginInvoke(UpdateGUI)</text>
+</svg>
+<div class="bildtext">Abbildung 5: Drei Threads, ein GUI-Zugriffsweg — alle Nebenthreads melden sich nur über den Dispatcher (VL6/E6).</div>
+</div>
+<p class="klein">
+Beendet wird kontrolliert mit boolschen Flags (<span class="mono">ThreadsRunning</span>,
+<span class="mono">ControllerAktiv</span>) statt <span class="mono">Thread.Abort()</span>;
+beim Trennen und beim Schließen des Fensters werden beide Threads angehalten,
+bevor die Schnittstelle geschlossen wird.
+</p>
+
+<!-- ================= 10 ZUSTAND ================= -->
+<h2 id="zustand">10. Kommunikations-Zustandsmaschine <span class="id">(PROG-009, F3)</span></h2>
+<p>
+Herzstück der Sicherheit ist eine Zustandsmaschine, die jeden unzulässigen
+Übergang mit einer Ausnahme blockiert. Dadurch kann <i>strukturell</i> kein
+Steuerbefehl oder Arming vor dem abgeschlossenen Handshake gesendet werden:
+</p>
+<div class="abbildung">
+<svg viewBox="0 0 920 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Zustandsdiagramm">
+  <defs>
+    <marker id="st" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d3a5f"/>
+    </marker>
+  </defs>
+  <g font-size="12.5" font-weight="bold" text-anchor="middle">
+    <rect x="14"  y="60" width="140" height="44" rx="22" fill="#eef3f8" stroke="#1d3a5f"/><text x="84"  y="87" fill="#1d3a5f">Disconnected</text>
+    <rect x="198" y="60" width="130" height="44" rx="22" fill="#eef3f8" stroke="#1d3a5f"/><text x="263" y="87" fill="#1d3a5f">PortOpen</text>
+    <rect x="372" y="60" width="140" height="44" rx="22" fill="#eef3f8" stroke="#1d3a5f"/><text x="442" y="87" fill="#1d3a5f">Handshaking</text>
+    <rect x="556" y="60" width="160" height="44" rx="22" fill="#f3f8f3" stroke="#1b6b2f"/><text x="636" y="87" fill="#1b6b2f">HeartbeatActive</text>
+    <rect x="760" y="60" width="130" height="44" rx="22" fill="#fdf6e8" stroke="#b08a2a"/><text x="825" y="87" fill="#7a5c12">Armed</text>
+  </g>
+  <g font-size="11" fill="#5a6673" text-anchor="middle">
+    <text x="176" y="48">Verbinde()</text>
+    <text x="352" y="48">„FC initialisieren“</text>
+    <text x="522" y="48">5. Nachricht gesendet</text>
+    <text x="773" y="48">Arming-Sequenz</text>
+    <text x="700" y="132" fill="#7a5c12">Disarming: AccessoryDesired −1</text>
+    <text x="240" y="152">Trennen / Controller-Verlust: zurück auf Disconnected (ggf. vorher automatisch entwaffnen)</text>
+  </g>
+  <line x1="154" y1="82" x2="194" y2="82" stroke="#1d3a5f" stroke-width="1.8" marker-end="url(#st)"/>
+  <line x1="328" y1="82" x2="368" y2="82" stroke="#1d3a5f" stroke-width="1.8" marker-end="url(#st)"/>
+  <line x1="512" y1="82" x2="552" y2="82" stroke="#1d3a5f" stroke-width="1.8" marker-end="url(#st)"/>
+  <line x1="716" y1="82" x2="756" y2="82" stroke="#1d3a5f" stroke-width="1.8" marker-end="url(#st)"/>
+  <path d="M760 104 C 700 150, 660 130, 640 108" fill="none" stroke="#7a5c12" stroke-width="1.6" marker-end="url(#st)"/>
+</svg>
+<div class="bildtext">Abbildung 6: Zustände der Kommunikation. Steuerbefehle sind ab „HeartbeatActive“ erlaubt; „Armed“ schaltet die Motoren scharf.</div>
+</div>
+<p class="klein">
+Im Code: <span class="mono">QuadroControl.Core/Communication/CommStateMachine.cs</span>.
+Jeder unzulässige Übergang (z.&nbsp;B. „Arming nur mit aktivem Heartbeat möglich“)
+wirft eine <span class="mono">InvalidOperationException</span>, die in der GUI
+als Meldung erscheint — nie als still gesendeter Motorwert. Der
+Controller-Thread sendet nur, wenn <span class="mono">CanSendControlCommands</span>
+wahr ist.
+</p>
+
+<!-- ================= 11 SICHERHEIT ================= -->
+<h2 id="sicherheit">11. Sicherheitsfeatures <span class="id">(PROG-009/009A/010A/011, F3)</span></h2>
+<table>
+  <tr><th>Feature</th><th>Anforderung</th><th>Umsetzung / Verhalten</th></tr>
+  <tr>
+    <td><b>Sende-Sperre vor dem Handshake</b></td>
+    <td>PROG-009, F3</td>
+    <td>Zustandsmaschine (Abschnitt 10): ohne „Heartbeat aktiv“ verlässt kein Steuerbefehl das Programm; unzulässige Aktionen erzeugen eine verständliche GUI-Meldung.</td>
+  </tr>
+  <tr>
+    <td><b>Controller-Verlust-Erkennung</b></td>
+    <td>PROG-009A</td>
+    <td>Der Controller-Thread prüft alle ca. 20 ms <span class="mono">XBox.IsConnected</span>. Bei Verlust: automatisch Disarming-Sequenz, Neutralbefehl senden, Meldung in der GUI, LED aus.</td>
+  </tr>
+  <tr>
+    <td><b>Neutralbefehl ohne Eingabe</b></td>
+    <td>PROG-011</td>
+    <td>Sobald kein Stick über der Totzone (±2500) und keine Taste/Trigger anliegen, sendet die App einen <span class="mono">ManualControlCommand</span> mit allen Werten 0 — „der letzte Wert klebt nicht“, die Rotoren stehen still.</td>
+  </tr>
+  <tr>
+    <td><b>Eindeutige Arming-Anzeige</b></td>
+    <td>PROG-010A</td>
+    <td>LED-Bild aus der Vorlage (<span class="mono">LED_grn.png</span> leuchtet im Zustand „Armed“, <span class="mono">LED_aus.png</span> dunkel) <b>plus</b> farbiger Text: <span class="led gruen"></span> grün „Armed“ / <span class="led aus"></span> rot „Disarmed“. Die Umschaltung folgt demselben Textfeld, das auch das Code-Behind setzt — keine abweichende Doppelbelegung möglich.</td>
+  </tr>
+  <tr>
+    <td><b>Definiertes Arming</b></td>
+    <td>E5, PROG-008A</td>
+    <td>Arming nur über Taste A im Zustand „Heartbeat aktiv“ (5× Throttle/Thrust = −1, dann AccessoryVal = +1); Disarming nur über Taste B im Zustand „Armed“.</td>
+  </tr>
+  <tr>
+    <td><b>Sauberes Trennen</b></td>
+    <td>PROG-009, F3</td>
+    <td>Beim Trennen <i>und</i> beim Fensterschließen: ggf. entwaffnen, Neutralbefehl senden, Threads stoppen, erst dann die Schnittstelle schließen.</td>
+  </tr>
+  <tr>
+    <td><b>Vollständigkeit der Steuerbefehle</b></td>
+    <td>E2, PROG-011</td>
+    <td>Jeder Steuerbefehl enthält alle 9 Felder in fester Reihenfolge; unbenutzte Felder werden aktiv auf 0 gesetzt; Thrust wird intern zwangsweise mit Throttle synchronisiert — es kann kein Feld mit Alt-Wert „stehen bleiben“.</td>
+  </tr>
+  <tr>
+    <td><b>Hinweis in der GUI (Programm 2)</b></td>
+    <td>F1</td>
+    <td>Dauerhafter Warnhinweis „nur propellerlos testen“ im Fenster des Real-Programms — die Motoren können sich ungeplant in Betrieb setzen.</td>
+  </tr>
+</table>
+<p class="klein">
+Die Sicherheitslogik liegt testbar im Core (<span class="mono">SafetyMonitor</span>,
+<span class="mono">CommStateMachine</span>) und ist durch Unit-Tests abgedeckt.
+Detaillierte Beschreibung je Feature: <span class="mono">docs/sicherheitsfeatures.md</span>
+(Beleg C8).
+</p>
+
+<!-- ================= 12 TEST ================= -->
+<h2 id="test">12. Testumgebung und Vorgehensweise <span class="id">(E7)</span></h2>
+<p>
+Entsprechend der Empfehlung der Vorlesung wird <b>Programm 1 zuerst</b> gegen
+die virtuelle Testumgebung entwickelt und erprobt; erst wenn dort alles
+funktioniert, wird das Verhalten am realen Quadrocopter geprüft (der Test mit
+dem realen FC bleibt dennoch unerlässlich). Der Demonstrator
+<span class="mono">Quadrocopter.exe</span> visualisiert den simulierten Flug
+(roter Rahmen = Disarmed, grüner Rahmen = Armed):
+</p>
+<ol>
+  <li><span class="mono">Quadrocopter.exe</span> starten (Netzwerkzugriff ablehnen), Szene wählen.</li>
+  <li>Steuerprogramm starten → COM-Port verbinden → „FC initialisieren und Heartbeat“ → „Controller lesen“.</li>
+  <li>Mit Taste A armen (LED grün), fliegen, mit Taste B disarmen, trennen.</li>
+  <li>Dasselbe Programm (Programm 2) anschließend propellerlos am realen FC wiederholen.</li>
+</ol>
+<div class="hinweis">
+<b>Grenzen der Linux-Build-VM (ehrliche Selbsteinschätzung):</b> Der Logikkern
+und die 79 Unit-Tests laufen und bestehen auf der Build-VM; die beiden
+WPF-Anwendungen und das Laufzeitverhalten der Kurs-DLLs (CRC-Anhang, Testumgebung)
+können dagegen <b>nur auf einem Windows-PC mit Visual Studio 2019</b> geprüft
+werden. Alle dort nötigen Schritte stehen als nummerierte Checkliste in
+<span class="mono">docs/windows-testplan.md</span>.
+</div>
+<div class="gefahr">
+<b>Sicherheit vor dem Real-Test:</b> Propeller abmontiert (F1) bis auf den
+eigentlichen Flug; OPLink nur mit Antenne betreiben (F2); Throttle Curve im
+LibrePilot nach Endkonfiguration auf max. 0,3 bei 100 % Input einstellen
+(PROG-004A).
+</div>
+
+<div class="fusszeile">
+IPE-Quadrocopter — Programmerläuterung &middot; erzeugt als selbstständige
+HTML-Datei (ohne externe Ressourcen; offline darstellbar) &middot;
+Stand: 28.10.2026 &middot; Quelle der technischen Angaben: Quelltext der
+Lösung (QuadroControl.Core, QuadroControl.Virtuell, QuadroControl.Real)
+sowie VL5/VL6/UE4 und Lastenheft des OPAL-Kurses.
+</div>
+
+</div>
+</body>
+</html>
