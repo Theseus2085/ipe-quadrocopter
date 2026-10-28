@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Multi-Target:
+         netstandard2.0 -> Build + Unit-Tests auf Linux (dotnet CLI), Referenz durch das Testprojekt (net8.0)
+         net452         -> Referenz durch die beiden WPF-Apps (.NET Framework 4.5.2 kann netstandard2.0 nicht laden!)
+         Die WPF-Apps greifen per ProjectReference mit SetTargetFramework=TargetFramework=net452 auf den net452-Build zu. -->
+    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
+    <RootNamespace>QuadroControl.Core</RootNamespace>
+    <AssemblyName>QuadroControl.Core</AssemblyName>
+    <LangVersion>7.3</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <Description>Protokoll- und Logikkern der Quadrocopter-Steuerung: UAVTalk-Nachrichten, Handshake, Herzschlag, Zustandsmaschine, Controller-Mapping, Sicherheitslogik</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- .NET-Framework-4.5.2-Referenzassemblys: erlauben den net452-Build auch auf Linux/ohne installiertes Targeting Pack (nur Build-Hilfsmittel, keine Laufzeitabhaengigkeit) -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net452" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

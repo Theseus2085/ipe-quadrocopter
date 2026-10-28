@@ -9,3 +9,5 @@ quellen/
 *.dll
 *.pdf
 nightly/
+.vorlage-ref/
+libs/
