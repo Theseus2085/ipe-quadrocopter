@@ -5,52 +5,194 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QuadroControl.Real"
         mc:Ignorable="d"
-        Title="QuadroControl Real – realer Quadrocopter (Platzhalter-Layout, Feinentwurf folgt)" Height="580" Width="480">
-    <!-- P2-PLATZHALTER: rein funktionales Grid mit den vertraglich festgelegten
-         Elementnamen (UE4). Das visuelle Design wird in Phase P3 erstellt. -->
-    <Grid Margin="10">
-        <StackPanel>
-            <TextBlock Text="Programm 2: Flug mit dem realen Quadrocopter (KTCQuadroControl)" FontWeight="Bold" Margin="0,0,0,8"/>
+        Title="MainWindow"
+        Width="680" MinWidth="620"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI" FontSize="13">
+    <!--
+      P3-Feinentwurf nach dem Zielprogramm aus UE4 Folie 3 ("Zielprogramm für
+      Übung 4"): links die Knopfspalte (COMPort verbinden / COMPort trennen /
+      FC initialisieren und Heartbeat / — Leerzeile — / Controller lesen),
+      rechts oben die TextBox COMXY mit dem Verbindungsstatus daneben,
+      rechts unten auf Höhe von "Controller lesen" der Armingstatus.
+      Ergänzungen (vertraglich zulässig, BUILD-AUFTRAG "may extend"):
+      Programm-Kopfzeile mit Sicherheitshinweis (F1: propellerlos testen),
+      Button zum Auslesen der COM-Ports (DLL-Funktion HoleAktuelleCOMPorts),
+      LED-Bilder für den Arming-Zustand (PROG-010A), Controller-Ausgabe in
+      den TB_*-Feldern inkl. TB_DLLHex (DLL-Funktion KonvertiereFloatZuHexString).
+      Die x:Name-Bezeichner sind der eingefrorene Vertrag (UE4) und dürfen
+      NICHT geändert werden — das Code-Behind greift direkt darauf zu.
+    -->
+    <Window.Resources>
 
-            <!-- COM-Port -->
-            <TextBlock Text="COM-Port (Revolution Virtual COM Port bzw. OPLink):"/>
-            <TextBox x:Name="TB_COMPort" Text="COM3" Margin="0,2,0,4"/>
-            <Button x:Name="BT_COMPortsAktualisieren" Content="COM-Ports aktualisieren (HoleAktuelleCOMPorts)" Padding="4" Margin="0,2,0,8" Click="BT_COMPortsAktualisieren_Click"/>
+        <!-- Kleine Beschriftung über den Ein-/Ausgabefeldern -->
+        <Style x:Key="FeldBeschriftung" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#606060"/>
+            <Setter Property="Margin" Value="0,0,0,3"/>
+        </Style>
 
-            <!-- Kommunikationssteuerung (PROG-008A) -->
-            <Button x:Name="BT_COMPortVerbinde" Content="COMPort verbinden" Padding="4" Margin="0,2" Click="BT_COMPortVerbinde_Click"/>
-            <Button x:Name="BT_COMPortTrennen" Content="COMPort trennen" Padding="4" Margin="0,2" Click="BT_COMPortTrennen_Click"/>
-            <Button x:Name="BT_HS_HB" Content="FC initialisieren und Heartbeat" Padding="4" Margin="0,2" Click="BT_HS_HB_Click"/>
-            <Button x:Name="BT_XBoxRead" Content="Controller lesen" Padding="4" Margin="0,2,10,8" Click="BT_XBoxRead_Click"/>
+        <!-- Buttons der linken Spalte: einheitlich, volle Spaltenbreite (wie Folie 3) -->
+        <Style x:Key="AktionButton" TargetType="Button">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
 
-            <!-- Status -->
-            <StackPanel Orientation="Horizontal" Margin="0,4">
-                <TextBlock Text="Verbindungsstatus: " Width="140"/>
-                <Label x:Name="Label_VerbindungStatus" Content="Getrennt" FontWeight="Bold"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,4">
-                <TextBlock Text="Armingstatus: " Width="140"/>
-                <Label x:Name="Label_ArmingStatus" Content="Disarmed" FontWeight="Bold"/>
-            </StackPanel>
+        <!--
+          Arming-LED (PROG-010A): Im Zustand "Armed" leuchtet LED_grn.png aus
+          der Vorlage, sonst zeigt LED_aus.png die dunkle LED. Die LED folgt
+          dem Text von Label_ArmingStatus über einen DataTrigger — so bleibt
+          das Code-Behind unverändert. Die Vorlage enthält kein rotes LED-Bild;
+          "Disarmed" ist trotzdem eindeutig: dunkle LED + rote Schrift + Text.
+        -->
+        <Style x:Key="ArmingLed" TargetType="Image">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Source" Value="/libs/LED_aus.png"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=Label_ArmingStatus, Path=Content}" Value="Armed">
+                    <Setter Property="Source" Value="/libs/LED_grn.png"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
 
-            <!-- Controller-Ausgabe (UE4-Namenskonvention TB_*) -->
-            <TextBlock Text="Controller (Mode-2: links Y=Gas, links X=Yaw, rechts X=Roll, rechts Y=Pitch, A=Arming, B=Disarming)" TextWrapping="Wrap" Margin="0,10,0,4"/>
-            <UniformGrid Columns="2">
-                <TextBlock Text="Links X (Yaw):"/>
-                <TextBox x:Name="TB_AnalogLX" IsReadOnly="True" Text="0"/>
-                <TextBlock Text="Links Y (Throttle):"/>
-                <TextBox x:Name="TB_AnalogLY" IsReadOnly="True" Text="0"/>
-                <TextBlock Text="Rechts X (Roll):"/>
-                <TextBox x:Name="TB_AnalogRX" IsReadOnly="True" Text="0"/>
-                <TextBlock Text="Rechts Y (Pitch):"/>
-                <TextBox x:Name="TB_AnalogRY" IsReadOnly="True" Text="0"/>
-                <TextBlock Text="LeftTrigger:"/>
-                <TextBox x:Name="TB_LeftTrigger" IsReadOnly="True" Text="0"/>
-                <TextBlock Text="Tasten:"/>
-                <TextBox x:Name="TB_ButtonA" IsReadOnly="True" Text="-"/>
-                <TextBlock Text="Throttle als Hex (DLL KonvertiereFloatZuHexString):" TextWrapping="Wrap"/>
-                <TextBox x:Name="TB_DLLHex" IsReadOnly="True" Text="00 00 00 00"/>
-            </UniformGrid>
+        <!-- Arming-Schrift: rot = Disarmed, grün = Armed (zweite, eindeutige Farbebene) -->
+        <Style x:Key="ArmingText" TargetType="Label">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#B22222"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=Label_ArmingStatus, Path=Content}" Value="Armed">
+                    <Setter Property="Foreground" Value="#1B7A1B"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Verbindungsstatus: Status-Texte des Code-Behinds können lang sein → Umbruch -->
+        <Style x:Key="VerbindungText" TargetType="Label">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Label">
+                        <TextBlock Text="{TemplateBinding Content}" TextWrapping="Wrap"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Ausgabefelder des Controllers (nur lesend) -->
+        <Style x:Key="ControllerFeld" TargetType="TextBox">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Background" Value="#FAFAFA"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,12,6"/>
+        </Style>
+
+        <!-- Beschriftungen der Controller-Felder -->
+        <Style x:Key="ControllerFeldName" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <!-- Links: Knopfspalte des Zielprogramms (Folie 3) -->
+            <ColumnDefinition Width="272"/>
+            <!-- Rechts: Statusanzeigen -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Kopfzeile: Programm-Identifikation + Sicherheitshinweis (F1) -->
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,18">
+            <TextBlock Text="QuadroControl Real — Programm 2: Flug mit dem realen Quadrocopter (KTCQuadroControl)"
+                       FontSize="15" FontWeight="SemiBold" Foreground="#20364D"/>
+            <TextBlock Text="UAVTalk-Kommunikation über die Kurs-Bibliothek: COM-Port, Handshake + Heartbeat, Steuerung per Xbox-Controller (Mode-2)."
+                       FontSize="12" Foreground="#606060" TextWrapping="Wrap" Margin="0,3,0,0"/>
+            <TextBlock Text="ACHTUNG: Am realen Quadrocopter nur propellerlos testen (Sicherheitshinweis F1) — die Motoren können sich ungeplant in Betrieb setzen."
+                       FontSize="12" FontWeight="SemiBold" Foreground="#B22222" TextWrapping="Wrap" Margin="0,4,0,0"/>
         </StackPanel>
+
+        <!-- Folien-Zeilen 1–3, links: Auf-/Abbau des seriellen Ports, Initialisierung -->
+        <StackPanel Grid.Row="1" Grid.Column="0">
+            <Button x:Name="BT_COMPortVerbinde" Content="COMPort verbinden" Style="{StaticResource AktionButton}" Click="BT_COMPortVerbinde_Click"/>
+            <Button x:Name="BT_COMPortTrennen" Content="COMPort trennen" Style="{StaticResource AktionButton}" Click="BT_COMPortTrennen_Click"/>
+            <Button x:Name="BT_HS_HB" Content="FC initialisieren und Heartbeat" Style="{StaticResource AktionButton}" Click="BT_HS_HB_Click"/>
+        </StackPanel>
+
+        <!-- Folien-Zeile 1, rechts: Einstellung des COM-Ports + Verbindungsstatus -->
+        <Grid Grid.Row="1" Grid.Column="1" Margin="16,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                <TextBlock Text="COM-Port" Style="{StaticResource FeldBeschriftung}"/>
+                <TextBox x:Name="TB_COMPort" Text="COM3" Width="104" Height="26"
+                         VerticalContentAlignment="Center" HorizontalAlignment="Left"
+                         VerticalAlignment="Top"/>
+                <Button x:Name="BT_COMPortsAktualisieren" Content="COM-Ports suchen"
+                        Height="26" Padding="8,2" Margin="0,6,0,0"
+                        HorizontalAlignment="Left" Click="BT_COMPortsAktualisieren_Click"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock Text="Verbindungsstatus" Style="{StaticResource FeldBeschriftung}"/>
+                <Label x:Name="Label_VerbindungStatus" Content="Getrennt" Style="{StaticResource VerbindungText}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Leerzeile zwischen Folien-Zeile 3 und Zeile 4 (wie im Zielprogramm) -->
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Height="24"/>
+
+        <!-- Folien-Zeile 4, links: Controller lesen (Start/Stop der Controller-Abfrage) -->
+        <Button x:Name="BT_XBoxRead" Grid.Row="3" Grid.Column="0" Content="Controller lesen"
+                Height="34" Padding="10,4" Click="BT_XBoxRead_Click"/>
+
+        <!-- Folien-Zeile 4, rechts: Anzeige des Arming-Status mit LED (PROG-010A) -->
+        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+            <TextBlock Text="Armingstatus" Style="{StaticResource FeldBeschriftung}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+            <Image x:Name="Image_ArmingLED" Style="{StaticResource ArmingLed}"/>
+            <Label x:Name="Label_ArmingStatus" Content="Disarmed" Style="{StaticResource ArmingText}"/>
+        </StackPanel>
+
+        <!-- Ergänzung (vertraglich zulässig): Controller-Ausgabe in TB_*-Feldern -->
+        <GroupBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                  Header="Controller-Ausgabe (Xbox-Controller)" Margin="0,18,0,0" Padding="10,8,10,4">
+            <StackPanel>
+                <TextBlock Text="Mode-2: linker Stick Y = Gas (Throttle), linker Stick X = Gieren (Yaw), rechter Stick X = Rollen (Roll), rechter Stick Y = Nicken (Pitch) — Taste A = Arming, Taste B = Disarming"
+                           FontSize="12" Foreground="#606060" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <UniformGrid Columns="4">
+                    <TextBlock Text="Links X (Yaw):" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBox x:Name="TB_AnalogLX" Style="{StaticResource ControllerFeld}" Text="0"/>
+                    <TextBlock Text="Links Y (Gas):" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBox x:Name="TB_AnalogLY" Style="{StaticResource ControllerFeld}" Text="0"/>
+                    <TextBlock Text="Rechts X (Roll):" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBox x:Name="TB_AnalogRX" Style="{StaticResource ControllerFeld}" Text="0"/>
+                    <TextBlock Text="Rechts Y (Pitch):" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBox x:Name="TB_AnalogRY" Style="{StaticResource ControllerFeld}" Text="0"/>
+                    <TextBlock Text="LeftTrigger:" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBox x:Name="TB_LeftTrigger" Style="{StaticResource ControllerFeld}" Text="0"/>
+                    <TextBlock Text="Tasten:" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBox x:Name="TB_ButtonA" Style="{StaticResource ControllerFeld}" Text="-"/>
+                    <TextBlock Text="Gas als DLL-Hex:" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBox x:Name="TB_DLLHex" Style="{StaticResource ControllerFeld}" Text="00 00 00 00"/>
+                </UniformGrid>
+            </StackPanel>
+        </GroupBox>
     </Grid>
 </Window>

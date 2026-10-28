@@ -99,5 +99,10 @@
   <ItemGroup>
     <PackageReference Include="SharpDX.XInput" Version="4.2.0" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- LED-Bilder der Arming-Anzeige (PROG-010A); Quelle: Vorlage_VS.zip bin/Debug, siehe VORLAGE-DLLS.md -->
+    <Resource Include="libs\LED_aus.png" />
+    <Resource Include="libs\LED_grn.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
