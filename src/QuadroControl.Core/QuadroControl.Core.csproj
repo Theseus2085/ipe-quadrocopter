@@ -6,6 +6,8 @@
          net452         -> Referenz durch die beiden WPF-Apps (.NET Framework 4.5.2 kann netstandard2.0 nicht laden!)
          Die WPF-Apps greifen per ProjectReference mit SetTargetFramework=TargetFramework=net452 auf den net452-Build zu. -->
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
+    <!-- GUID passend zur Solution und zu den ProjectReference-Einträgen der WPF-Apps -->
+    <ProjectGuid>{A1B5C9D2-3E4F-4A5B-8C6D-7E8F9A0B1C2D}</ProjectGuid>
     <RootNamespace>QuadroControl.Core</RootNamespace>
     <AssemblyName>QuadroControl.Core</AssemblyName>
     <LangVersion>7.3</LangVersion>
