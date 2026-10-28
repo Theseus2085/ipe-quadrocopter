@@ -1,4 +1,4 @@
-namespace QuadroControl.Core.Protocol
+﻿namespace QuadroControl.Core.Protocol
 {
     /// <summary>
     /// Datenabschnitt des UAVObjects AccessoryDesired (ObjectID C4 09 98 5A).

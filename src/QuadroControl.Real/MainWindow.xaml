@@ -1,12 +1,56 @@
-<Window x:Class="QuadroControl.Real.MainWindow"
+﻿<Window x:Class="QuadroControl.Real.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QuadroControl.Real"
         mc:Ignorable="d"
-        Title="QuadroControl Real – realer Quadrocopter" Height="350" Width="525">
-    <Grid>
+        Title="QuadroControl Real – realer Quadrocopter (Platzhalter-Layout, Feinentwurf folgt)" Height="580" Width="480">
+    <!-- P2-PLATZHALTER: rein funktionales Grid mit den vertraglich festgelegten
+         Elementnamen (UE4). Das visuelle Design wird in Phase P3 erstellt. -->
+    <Grid Margin="10">
+        <StackPanel>
+            <TextBlock Text="Programm 2: Flug mit dem realen Quadrocopter (KTCQuadroControl)" FontWeight="Bold" Margin="0,0,0,8"/>
 
+            <!-- COM-Port -->
+            <TextBlock Text="COM-Port (Revolution Virtual COM Port bzw. OPLink):"/>
+            <TextBox x:Name="TB_COMPort" Text="COM3" Margin="0,2,0,4"/>
+            <Button x:Name="BT_COMPortsAktualisieren" Content="COM-Ports aktualisieren (HoleAktuelleCOMPorts)" Padding="4" Margin="0,2,0,8" Click="BT_COMPortsAktualisieren_Click"/>
+
+            <!-- Kommunikationssteuerung (PROG-008A) -->
+            <Button x:Name="BT_COMPortVerbinde" Content="COMPort verbinden" Padding="4" Margin="0,2" Click="BT_COMPortVerbinde_Click"/>
+            <Button x:Name="BT_COMPortTrennen" Content="COMPort trennen" Padding="4" Margin="0,2" Click="BT_COMPortTrennen_Click"/>
+            <Button x:Name="BT_HS_HB" Content="FC initialisieren und Heartbeat" Padding="4" Margin="0,2" Click="BT_HS_HB_Click"/>
+            <Button x:Name="BT_XBoxRead" Content="Controller lesen" Padding="4" Margin="0,2,10,8" Click="BT_XBoxRead_Click"/>
+
+            <!-- Status -->
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Verbindungsstatus: " Width="140"/>
+                <Label x:Name="Label_VerbindungStatus" Content="Getrennt" FontWeight="Bold"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Armingstatus: " Width="140"/>
+                <Label x:Name="Label_ArmingStatus" Content="Disarmed" FontWeight="Bold"/>
+            </StackPanel>
+
+            <!-- Controller-Ausgabe (UE4-Namenskonvention TB_*) -->
+            <TextBlock Text="Controller (Mode-2: links Y=Gas, links X=Yaw, rechts X=Roll, rechts Y=Pitch, A=Arming, B=Disarming)" TextWrapping="Wrap" Margin="0,10,0,4"/>
+            <UniformGrid Columns="2">
+                <TextBlock Text="Links X (Yaw):"/>
+                <TextBox x:Name="TB_AnalogLX" IsReadOnly="True" Text="0"/>
+                <TextBlock Text="Links Y (Throttle):"/>
+                <TextBox x:Name="TB_AnalogLY" IsReadOnly="True" Text="0"/>
+                <TextBlock Text="Rechts X (Roll):"/>
+                <TextBox x:Name="TB_AnalogRX" IsReadOnly="True" Text="0"/>
+                <TextBlock Text="Rechts Y (Pitch):"/>
+                <TextBox x:Name="TB_AnalogRY" IsReadOnly="True" Text="0"/>
+                <TextBlock Text="LeftTrigger:"/>
+                <TextBox x:Name="TB_LeftTrigger" IsReadOnly="True" Text="0"/>
+                <TextBlock Text="Tasten:"/>
+                <TextBox x:Name="TB_ButtonA" IsReadOnly="True" Text="-"/>
+                <TextBlock Text="Throttle als Hex (DLL KonvertiereFloatZuHexString):" TextWrapping="Wrap"/>
+                <TextBox x:Name="TB_DLLHex" IsReadOnly="True" Text="00 00 00 00"/>
+            </UniformGrid>
+        </StackPanel>
     </Grid>
 </Window>

@@ -1,4 +1,4 @@
-namespace QuadroControl.Core.Protocol
+﻿namespace QuadroControl.Core.Protocol
 {
     /// <summary>
     /// UAVTalk Message-Types (Header-Feld B, wissen-programmierung.md §5).

@@ -1,4 +1,4 @@
-namespace QuadroControl.Core
+﻿namespace QuadroControl.Core
 {
     /// <summary>
     /// Zentrale Konfigurationswerte der Steuerungsapplikation ("config from

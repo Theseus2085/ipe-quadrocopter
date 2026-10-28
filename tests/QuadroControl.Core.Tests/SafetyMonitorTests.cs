@@ -1,4 +1,4 @@
-using QuadroControl.Core.Safety;
+﻿using QuadroControl.Core.Safety;
 using Xunit;
 
 namespace QuadroControl.Core.Tests

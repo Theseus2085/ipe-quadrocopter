@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using QuadroControl.Core.Protocol;
 using Xunit;
 

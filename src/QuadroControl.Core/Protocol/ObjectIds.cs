@@ -1,4 +1,4 @@
-namespace QuadroControl.Core.Protocol
+﻿namespace QuadroControl.Core.Protocol
 {
     /// <summary>
     /// ObjectIDs der im Projekt benötigten UAVObjects.

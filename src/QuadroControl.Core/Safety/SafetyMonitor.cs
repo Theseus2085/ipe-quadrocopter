@@ -1,4 +1,4 @@
-using QuadroControl.Core.Protocol;
+﻿using QuadroControl.Core.Protocol;
 
 namespace QuadroControl.Core.Safety
 {

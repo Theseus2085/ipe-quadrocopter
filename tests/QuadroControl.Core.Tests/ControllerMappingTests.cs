@@ -1,4 +1,4 @@
-using QuadroControl.Core.Controller;
+﻿using QuadroControl.Core.Controller;
 using Xunit;
 
 namespace QuadroControl.Core.Tests
