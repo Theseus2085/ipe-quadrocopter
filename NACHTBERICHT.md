@@ -60,3 +60,17 @@ Alle Phasen P0-P7 des BUILD-AUFTRAG.md abgeschlossen: komplette Solution mit Cor
 
 - Lock entfernt, Cron-Job "ipe-quadrocopter Nachtbuild" deaktiviert (Auftrag erledigt; Re-Aktivierung bei Bedarf).
 - quellen/, harte-kriterien.md, wissen-programmierung.md: unangetastet.
+
+## Nachtbuild 30.10.2026 — Test-Suite-Expansion (TEST-AUFTRAG T1-T11)
+
+- Auftragsbasis: `TEST-AUFTRAG.md` (d0091fb); Child = glm-5.3 FULL (`claude-glm-full`), Laufzeit ~15 min, attempt 1 rc=0, TASK COMPLETE.
+- **Eigene Zählungen des Orchestrators** (`/home/openclaw/dotnet-ms/dotnet`):
+  - `dotnet test`: vorher 79/79 -> **nachher 385 passed, 0 failed, 0 skipped, exit 0** (Ziel >=150 deutlich übertroffen)
+  - `dotnet build IPE-Quadrocopter.sln`: **0 Warnungen, 0 Fehler, exit 0** (beide WPF-.exe erzeugt)
+- Commits: 12 neue (`[T1]`..`[T11]` + `[T-Reste]`); geändert NUR `tests/` + `ABWEICHUNGEN.md`; **0 Dateien unter `src/`** (Core eingefroren, WPF-Apps unberührt). Kein Core-Bugfix nötig.
+- Tauglichkeits-Stichprobe (3 zufällige neue Dateien: T3-Bytematrix, T7-Safety-Matrix, T10-Golden-Stream): unabhängige IEEE-754-Literale statt nachgerechneter Werte, Entscheidungsmatrix mit expliziten Erwartungswerten, aufzeichnender Fake-Transport, jede Nachricht einzeln asserted — **keine Tautologien gefunden**.
+- Abweichungen: 4 neue Einträge #13-16 (T3 kein Clamping = Ist-Verhalten eingefroren; T8 Trigger nicht in Core abbildbar; T8 Neutralstellung exakt nach Dokumentformel 32768/65535 statt idealisiert 0.5; wissen §6 ObjectIDMeta-Notiz nur für Single-Instance-Objekte korrekt). Alle rein dokumentarisch.
+- **Leak-Scan vor Push**: 27 Treffer, sämtlich Klasse „VM-Benutzername openclaw" in Bau-/Test-Auftragsdateien (`/home/openclaw/dotnet-ms/dotnet`-Pfade in BUILD-AUFTRAG.md/TEST-AUFTRAG.md). Keine Secrets/Token, keine Binärdateien/Kurs-PDFs, keine personenbezogenen Daten Simons (Kennung/Matrikel/Telefon/Adresse/Domains: 0). Identische Klasse ist seit dem P6-Push öffentlich (BUILD-AUFTRAG.md, 3 Vorkommen); die Test-Commits selbst führen keine neuen Vorkommen ein -> Push freigegeben mit Disposition (bei Bedarf: Pfade in Auftragsdateien auf `~/` kürzen + History-Rewrite — Simons Entscheidung).
+- **Push + Verifikation**: `main` fb81dda..979fab8 (fast-forward), anonymes `ls-remote`: remote HEAD == lokal (`979fab8`), Commit-Anzahl remote 27 == lokal 27, Repo public.
+- Quota: Start 22:00 UTC 2 % (5h-Fenster), Ende 22:22 UTC 8 % (5h), wöchentlich 32 %.
+- Exit: Lock entfernt, Cron-Job „ipe Test-Suite Nachtbuild" deaktiviert (Auftrag einmalig erledigt).
