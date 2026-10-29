@@ -8,11 +8,12 @@ gegen die **virtuelle Testumgebung** (Programm 1) und einmal gegen den **realen
 Quadrocopter** (Programm 2). Die Eingabe erfolgt über einen Xbox-360-Controller
 (SharpDX.XInput, Mode-2).
 
-> **Ehrlichkeitshinweis:** Der Logikkern und alle Unit-Tests wurden auf einer
-> Linux-VM entwickelt und geprüft (`dotnet test`: **79/79 grün**). Die beiden
-> **WPF-Anwendungen können nur unter Windows mit Visual Studio kompiliert und
-> getestet werden** (WPF/.NET Framework 4.5.2). Was dazu auf einem
-> Windows-PC zu prüfen ist, steht als nummerierte Checkliste in
+> **Ehrlichkeitshinweis:** Logikkern, Unit-Tests **und die Kompilierung beider
+> WPF-Anwendungen** (inkl. XAML) wurden auf einer Linux-VM verifiziert
+> (`dotnet build`: komplette Solution 0 Fehler; `dotnet test`: **79/79 grün**;
+> SDK-style-csproj mit `EnableWindowsTargeting`). **Starten und Fliegen** der
+> Apps (GUI, Testumgebung, Quadrocopter.exe, echter FC) geht nur unter Windows.
+> Was dazu auf einem Windows-PC zu prüfen ist, steht als nummerierte Checkliste in
 > **[docs/windows-testplan.md](docs/windows-testplan.md)**.
 
 ## Projektaufbau
@@ -35,8 +36,8 @@ IPE-Quadrocopter.sln
 | Projekt | Typ | Ziel-Framework | Baut auf |
 |---|---|---|---|
 | QuadroControl.Core | Klassenbibliothek | netstandard2.0 **+ net452** | Linux **und** Windows |
-| QuadroControl.Virtuell | WPF-Anwendung | .NET Framework 4.5.2 | nur Windows (VS2019) |
-| QuadroControl.Real | WPF-Anwendung | .NET Framework 4.5.2 | nur Windows (VS2019) |
+| QuadroControl.Virtuell | WPF-Anwendung | .NET Framework 4.5.2 | kompiliert/verifiziert auf Linux, **Ausführung** nur Windows (VS2019) |
+| QuadroControl.Real | WPF-Anwendung | .NET Framework 4.5.2 | kompiliert/verifiziert auf Linux, **Ausführung** nur Windows (VS2019) |
 | QuadroControl.Core.Tests | xunit-Tests | net8.0 | Linux **und** Windows |
 
 Der Kern (`QuadroControl.Core`) enthält Protokoll-Erzeugung (UAVTalk-Header,

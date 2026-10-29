@@ -36,10 +36,10 @@ namespace QuadroControl.Real
             Kqc.SchickeHexString(hexString); // statische Methode der Kurs-DLL
         }
 
-        /// <summary>Aktuell belegte COM-Ports des PCs (nur in KTCQuadroControl enthalten).</summary>
+        /// <summary>Aktuell belegte COM-Ports des PCs (nur in KTCQuadroControl enthalten; Instanzmethode, s. VL5).</summary>
         public string[] HoleAktuelleCOMPorts()
         {
-            return Kqc.HoleAktuelleCOMPorts();
+            return _myQC.HoleAktuelleCOMPorts();
         }
 
         /// <summary>

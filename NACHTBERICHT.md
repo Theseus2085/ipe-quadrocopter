@@ -51,8 +51,8 @@ Alle Phasen P0-P7 des BUILD-AUFTRAG.md abgeschlossen: komplette Solution mit Cor
 
 ## Offen — braucht Simons Windows-PC (Linux-VM kann das nicht)
 
-1. DLLs/PNGs aus `Vorlage_VS.zip` nach `src/QuadroControl.*/libs/` kopieren (Anleitung: `VORLAGE-DLLS.md`) — ohne sie bauen die WPF-Projekte nicht (bewusst nicht im Repo, Kursmaterial)
-2. NuGet-Restore (SharpDX.XInput) + Build beider WPF-Apps in VS2019 — erste echte Compiler-Prüfung des XAML/Code-Behind
+1. DLLs/PNGs aus `Vorlage_VS.zip` nach `src/QuadroControl.*/libs/` kopieren (Anleitung: `VORLAGE-DLLS.md`) — ohne sie bauen die WPF-Projekte nicht (bewusst nicht im Repo, Kursmaterial). **Update 29.10.: auf der Build-VM liegt libs/ bereits, Kompilierung ist verifiziert; auf Simons PC einmalig kopieren.**
+2. ~~NuGet-Restore + Build beider WPF-Apps in VS2019 — erste echte Compiler-Prüfung~~ **ERLEDIGT 29.10.: komplette Solution baut auf der Linux-VM (SDK-style-csproj, EnableWindowsTargeting, 0 Fehler, beide .exe erzeugt; dabei Instanzmethoden-Fehler HoleAktuelleCOMPorts gefunden+behoben). In VS2019 bleibt nur: Solution öffnen, NuGet-Restore, F5.**
 3. Testlauf virtuelle Testumgebung: Steuerungsprogramm + Quadrocopter.exe (Szene I-III), Handshake/Heartbeat/Arming fliegen
 4. Danach erst realer FC (propellerlos!, F1) — `docs/windows-testplan.md` Schritt für Schritt
 
