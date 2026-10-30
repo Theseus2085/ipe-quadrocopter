@@ -110,7 +110,7 @@ Standardisierte Bytefolgen zwischen PC und FC. Alles **Little Endian** (Bytefolg
 **GCSTelemetryStats** – ObjectID `CA D1 DC 0A`. Aktiviert die UAVTalk-Schnittstelle am FC. Daten 37 Bytes gesamt: TxDataRate…RxCrcErrors (alle `00`), am Ende Status enum 1 B: `00` Disconnected, `01` HandshakeReq, `02` HandshakeAck, `03` Connected.
 
 - Vollständige ObjectID-Tabelle (114 Objekte, LibrePilot 16.09): OPAL → Softwareanleitungen → UAVTalk und LibrePilot → `ObjectID-Uebersicht_LibrePilot_1609.xlsx` (auch im NC-Spiegel).
-- Metadaten-Objekt: ObjectIDMeta = ObjectID + 1. Metadaten regeln Zugriffsrechte ("unwichtig", außer die zwei vorgegebenen Metadaten-Nachrichten im Handshake).
+- Metadaten-Objekt: ObjectIDMeta liegt NAHE der ObjectID, die Regel "ObjectID + 1" gilt NUR für einfach instanziierte Objekte (ManualControlCommand: C4 10 74 80 → Meta C4 10 74 81). Für mehrfach instanziierte Objekte weicht sie ab (AccessoryDesired: C4 09 98 5A → Meta C4 09 98 5C, LibrePilot-Konvention). Metadaten-Bytes deshalb NIEMALS ableiten, immer die wortwörtlichen VL5-Strings verwenden (ABWEICHUNGEN #16, korrigiert 2026-10-30).
 - UAVObjects live ansehen: LibrePilot GCS → "System"-Tab.
 
 ## 7. Kommunikationsablauf PC ↔ FC (5 Schritte, VL5 Folie 37 ff.)
