@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IPE-Quadrocopter — Programmerläuterung</title>
+<title>IPE-Quadrocopter - Programmerläuterung</title>
 <style>
   :root{
     --blau:#1d3a5f; --akzent:#2e6da4; --grau:#5a6673; --hell:#eef3f8;
@@ -95,7 +95,7 @@ Entsprechend der Aufgabenstellung gibt es <b>zwei Programme</b> (B1), die sich
 eine gemeinsame Bibliothek für die gesamte Logik teilen:
 </p>
 <table>
-  <tr><th></th><th>Programm 1 — QuadroControl.Virtuell</th><th>Programm 2 — QuadroControl.Real</th></tr>
+  <tr><th></th><th>Programm 1 - QuadroControl.Virtuell</th><th>Programm 2 - QuadroControl.Real</th></tr>
   <tr>
     <td><b>Gegenstelle</b></td>
     <td>virtuelle Testumgebung des Lehrstuhls (+ Unity-Demonstrator <span class="mono">Quadrocopter.exe</span>)</td>
@@ -116,7 +116,7 @@ eine gemeinsame Bibliothek für die gesamte Logik teilen:
 <!-- ================= 2 ARCHITEKTUR ================= -->
 <h2 id="architektur">2. Systemarchitektur</h2>
 <p>
-Die Signalkette vom Controller bis zu den Motoren — die Software ist der
+Die Signalkette vom Controller bis zu den Motoren - die Software ist der
 linke Block; sämtliche Funkverbindung übernimmt die vorgegebene Hardware:
 </p>
 <div class="abbildung">
@@ -157,11 +157,11 @@ linke Block; sämtliche Funkverbindung übernimmt die vorgegebene Hardware:
   <text x="168" y="72" text-anchor="middle" font-size="11" fill="#5a6673">Sticks/</text>
   <text x="168" y="98" text-anchor="middle" font-size="11" fill="#5a6673">Tasten</text>
 </svg>
-<div class="bildtext">Abbildung 1: Signalkette — der PC wandelt Sticksignale in UAVTalk-Nachrichten um (VL5, Komponenten des Gesamtsystems).</div>
+<div class="bildtext">Abbildung 1: Signalkette - der PC wandelt Sticksignale in UAVTalk-Nachrichten um (VL5, Komponenten des Gesamtsystems).</div>
 </div>
 <p class="klein">
 Wichtig (B3): Das Steuerprogramm spricht UAVTalk <i>selbst</i> über die
-Kurs-Bibliothek — die Kommunikation läuft nicht über LibrePilot-Middleware.
+Kurs-Bibliothek - die Kommunikation läuft nicht über LibrePilot-Middleware.
 Die CRC-8-Prüfsumme jeder Nachricht wird automatisch von der DLL angehängt;
 die Applikation berechnet niemals selbst eine Prüfsumme.
 </p>
@@ -171,8 +171,8 @@ die Applikation berechnet niemals selbst eine Prüfsumme.
 <p>
 Die Visual-Studio-Lösung <span class="mono">IPE-Quadrocopter.sln</span> enthält
 vier Projekte. Der gesamte „Verstand“ der Anwendung liegt in der
-Klassenbibliothek <b>QuadroControl.Core</b> — sie kennt weder die Kurs-DLLs
-noch WPF und ist deshalb vollständig automatisiert testbar (79 Unit-Tests).
+Klassenbibliothek <b>QuadroControl.Core</b> - sie kennt weder die Kurs-DLLs
+noch WPF und ist deshalb vollständig automatisiert testbar (385 Unit-Tests).
 Beide WPF-Programme unterscheiden sich nur noch durch den jeweiligen
 DLL-Adapter und die Fenster-Caption-Details:
 </p>
@@ -196,7 +196,7 @@ DLL-Adapter und die Fenster-Caption-Details:
   <tr>
     <td><span class="mono">QuadroControl.Core.Tests</span></td>
     <td>xunit-Tests: bekannte Byte-Vektoren, Feldreihenfolge, Handshake-Sequenz, Zustandsmaschine, Sicherheitslogik</td>
-    <td>Testprojekt, net8.0 — <b>79 Tests, alle bestanden</b></td>
+    <td>Testprojekt, net8.0 - <b>385 Tests, alle bestanden</b></td>
   </tr>
 </table>
 <p class="klein">
@@ -235,11 +235,11 @@ aus einem festen Rahmen; alle Zahlenwerte werden im <b>Little-Endian</b>-Format
     <text x="843" y="64" fill="#8f1d1d">G: CRC-8</text>
   </g>
   <g text-anchor="middle" font-size="11.5" fill="#5a6673">
-    <text x="56"  y="80">1 B — 3C</text>
-    <text x="144" y="80">1 B — 20</text>
-    <text x="243" y="80">2 B — LE</text>
-    <text x="368" y="80">4 B — byte-verdreht</text>
-    <text x="493" y="80">2 B — 00 00</text>
+    <text x="56"  y="80">1 B - 3C</text>
+    <text x="144" y="80">1 B - 20</text>
+    <text x="243" y="80">2 B - LE</text>
+    <text x="368" y="80">4 B - byte-verdreht</text>
+    <text x="493" y="80">2 B - 00 00</text>
     <text x="663" y="80">alle Felder, feste Reihenfolge</text>
     <text x="843" y="80" fill="#8f1d1d">hängt die DLL an</text>
   </g>
@@ -253,13 +253,13 @@ aus einem festen Rahmen; alle Zahlenwerte werden im <b>Little-Endian</b>-Format
 <h3>Beispiel: Zahlwerte im Little-Endian-Format</h3>
 <p>
 Ein <span class="mono">float32</span> wird als IEEE-754-Bitfolge gesendet,
-niederwertigstes Byte zuerst — identisch zur DLL-Funktion
+niederwertigstes Byte zuerst - identisch zur DLL-Funktion
 <span class="mono">KonvertiereFloatZuHexString</span>:
 </p>
 <pre><code>1.0f  →  00 00 80 3F      -1.0f  →  00 00 80 BF      0.0f  →  00 00 00 00</code></pre>
 <p>
 Komplette Nachricht für <span class="mono">AccessoryDesired = 1</span> (Arming)
-— 14 Bytes, ohne Prüfsumme:
+- 14 Bytes, ohne Prüfsumme:
 </p>
 <pre><code>3C 20 0E 00 5A 98 09 C4 00 00 00 00 80 3F
 │  │  │──│  │───────│  │──│  │──────│ └ float 1.0 (Little Endian)
@@ -275,7 +275,7 @@ Komplette Nachricht für <span class="mono">AccessoryDesired = 1</span> (Arming)
     <td><span class="mono">ManualControlCommand</span></td>
     <td><span class="mono">C4 10 74 80</span></td>
     <td>46 Bytes: Throttle, Roll, Pitch, Yaw, Collective(=0), Thrust(=Throttle) je float32; Channel int16[10] (=0); Connected (1 Byte); FlightModeSwitchPosition (1 Byte, =0)</td>
-    <td>Steuerbefehle an den FC — <b>alle 9 Felder immer senden</b>, feste Reihenfolge (E2)</td>
+    <td>Steuerbefehle an den FC - <b>alle 9 Felder immer senden</b>, feste Reihenfolge (E2)</td>
   </tr>
   <tr>
     <td><span class="mono">AccessoryDesired</span></td>
@@ -292,7 +292,7 @@ Komplette Nachricht für <span class="mono">AccessoryDesired = 1</span> (Arming)
 </table>
 <p class="klein">
 Im Nachrichtenkopf steht die ObjectID byte-verdreht (Little Endian), z.&nbsp;B.
-<span class="mono">80 74 10 C4</span> für ManualControlCommand — das übernimmt
+<span class="mono">80 74 10 C4</span> für ManualControlCommand - das übernimmt
 der <span class="mono">UavTalkBuilder</span> automatisch. Ein vollständiger
 Steuerbefehl hat die Länge 56 (0x0038), ein Handshake-/Heartbeat-Paket 47 (0x002F).
 </p>
@@ -302,7 +302,7 @@ Steuerbefehl hat die Länge 56 (0x0038), ein Handshake-/Heartbeat-Paket 47 (0x00
 <p>
 Nach dem Öffnen des COM-Ports wird der Flightcontroller mit genau <b>fünf
 Nachrichten</b> initialisiert; danach hält der <b>Heartbeat</b> die Verbindung
-lebendig — eine Nachricht pro Sekunde aus einem eigenen Thread:
+lebendig - eine Nachricht pro Sekunde aus einem eigenen Thread:
 </p>
 <div class="abbildung">
 <svg viewBox="0 0 880 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sequenzdiagramm Handshake und Heartbeat">
@@ -319,7 +319,7 @@ lebendig — eine Nachricht pro Sekunde aus einem eigenen Thread:
   <line x1="280" y1="44" x2="280" y2="452" stroke="#5a6673" stroke-dasharray="4 4"/>
   <line x1="600" y1="44" x2="600" y2="452" stroke="#5a6673" stroke-dasharray="4 4"/>
   <!-- Schritt 0 -->
-  <text x="440" y="70" text-anchor="middle" font-size="12" fill="#5a6673">zuvor: Verbinde(COMx) — COM-Port öffnen</text>
+  <text x="440" y="70" text-anchor="middle" font-size="12" fill="#5a6673">zuvor: Verbinde(COMx) - COM-Port öffnen</text>
   <!-- 1 -->
   <line x1="280" y1="95" x2="600" y2="95" stroke="#1d3a5f" stroke-width="1.6" marker-end="url(#seq)"/>
   <text x="290" y="88" font-size="12" fill="#24313f"><tspan font-weight="bold">1</tspan>  GCSTelemetryStats Status 00 (Disconnected)</text>
@@ -337,7 +337,7 @@ lebendig — eine Nachricht pro Sekunde aus einem eigenen Thread:
   <text x="290" y="228" font-size="12" fill="#24313f"><tspan font-weight="bold">5</tspan>  Metadaten AccessoryDesired (VL5, wortwörtlich)</text>
   <!-- Rahmen -->
   <rect x="240" y="72" width="400" height="176" rx="8" fill="none" stroke="#2e6da4" stroke-dasharray="6 4"/>
-  <text x="440" y="266" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#2e6da4">Handshake — genau diese 5 Nachrichten in dieser Reihenfolge</text>
+  <text x="440" y="266" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#2e6da4">Handshake - genau diese 5 Nachrichten in dieser Reihenfolge</text>
   <text x="440" y="283" text-anchor="middle" font-size="11.5" fill="#5a6673">danach: Zustand „Heartbeat aktiv“, Steuerbefehle erlaubt</text>
   <!-- Heartbeat-Schleife -->
   <rect x="240" y="300" width="400" height="120" rx="8" fill="#f3f8f3" stroke="#1b6b2f" stroke-dasharray="6 4"/>
@@ -348,11 +348,11 @@ lebendig — eine Nachricht pro Sekunde aus einem eigenen Thread:
   <text x="290" y="378" font-size="12" fill="#24313f">GCSTelemetryStats Status 03</text>
   <text x="440" y="410" text-anchor="middle" font-size="11.5" fill="#5a6673">… läuft parallel zum Controller-Thread, bis getrennt wird</text>
 </svg>
-<div class="bildtext">Abbildung 3: Kommunikationssequenz — 5-Handshake-Nachrichten, danach Heartbeat im Sekundentakt.</div>
+<div class="bildtext">Abbildung 3: Kommunikationssequenz - 5-Handshake-Nachrichten, danach Heartbeat im Sekundentakt.</div>
 </div>
 <p>
 Die beiden Metadaten-Nachrichten (Schritte 4 und 5) sind im Projekt als
-unveränderliche Konstanten hinterlegt — byte-genau aus der Vorlesungsfolie
+unveränderliche Konstanten hinterlegt - byte-genau aus der Vorlesungsfolie
 übernommen (Kleinschreibung wie auf der Folie; die DLL parst Hex unabhängig
 von Groß-/Kleinschreibung):
 </p>
@@ -360,7 +360,7 @@ von Groß-/Kleinschreibung):
 3c 20 12 00 5c 98 09 c4 00 00 41 00 d0 07 64 00 00 00   (Metadaten AccessoryDesired)</code></pre>
 <p class="klein">
 Steuerbefehle (<span class="mono">ManualControlCommand</span> im Takt von ca.
-20 ms) dürfen erst gesendet werden, wenn der Handshake abgeschlossen ist —
+20 ms) dürfen erst gesendet werden, wenn der Handshake abgeschlossen ist -
 das erzwingt die Zustandsmaschine aus Abschnitt 10.
 </p>
 
@@ -376,7 +376,7 @@ ausgelöst (UE4):
   <tr>
     <td>1. „Entsperren“ vorbereiten (5×)</td>
     <td><span class="mono">ManualControlCommand</span> mit <b>Throttle = −1</b> und <b>Thrust = −1</b>, Rest neutrale Werte</td>
-    <td>mehrfach hintereinander schreiben (im Code: 5× im Abstand von 50 ms) — nur diese Kombination erlaubt das Arming</td>
+    <td>mehrfach hintereinander schreiben (im Code: 5× im Abstand von 50 ms) - nur diese Kombination erlaubt das Arming</td>
   </tr>
   <tr>
     <td>2. Arming</td>
@@ -390,7 +390,7 @@ ausgelöst (UE4):
   </tr>
 </table>
 <p class="klein">
-Beide Sequenzen laufen nur im Zustand „Heartbeat aktiv“ bzw. „Armed“ — die
+Beide Sequenzen laufen nur im Zustand „Heartbeat aktiv“ bzw. „Armed“ - die
 Zustandsmaschine verhindert ein vorzeitiges oder doppeltes Arming.
 </p>
 
@@ -410,7 +410,7 @@ Handshake/Heartbeat, Arming) sind aus der GUI bedienbar (PROG-008A).
   <text x="26" y="30" font-size="13" fill="#24313f">MainWindow</text>
   <circle cx="594" cy="25" r="6" fill="#d9d9d9" stroke="#5a6673"/><circle cx="570" cy="25" r="6" fill="#d9d9d9" stroke="#5a6673"/><circle cx="546" cy="25" r="6" fill="#e0b4b0" stroke="#5a6673"/>
   <!-- Kopfzeile -->
-  <text x="26" y="62" font-size="11.5" fill="#5a6673">QuadroControl — Programm 1: virtuelle Testumgebung / Programm 2: realer Quadrocopter</text>
+  <text x="26" y="62" font-size="11.5" fill="#5a6673">QuadroControl - Programm 1: virtuelle Testumgebung / Programm 2: realer Quadrocopter</text>
   <!-- Buttons links -->
   <g font-size="12" fill="#24313f">
     <rect x="26" y="80" width="200" height="30" rx="3" fill="#f0f0f0" stroke="#9aa5b1"/>
@@ -435,7 +435,7 @@ Handshake/Heartbeat, Arming) sind aus der GUI bedienbar (PROG-008A).
   <!-- Controller-Ausgabe -->
   <rect x="26" y="270" width="588" height="126" rx="4" fill="#f7f9fb" stroke="#c9d4e0"/>
   <text x="40" y="292" font-size="12" font-weight="bold" fill="#1d3a5f">Controller-Ausgabe (Xbox-Controller)</text>
-  <text x="40" y="310" font-size="10.5" fill="#5a6673">Mode-2: links Y = Gas, links X = Gieren, rechts X = Rollen, rechts Y = Nicken — Taste A = Arming, Taste B = Disarming</text>
+  <text x="40" y="310" font-size="10.5" fill="#5a6673">Mode-2: links Y = Gas, links X = Gieren, rechts X = Rollen, rechts Y = Nicken - Taste A = Arming, Taste B = Disarming</text>
   <g font-size="11" fill="#24313f">
     <rect x="40"  y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="48" y="337">Links X (Yaw)</text>
     <rect x="190" y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="198" y="337">Links Y (Gas)</text>
@@ -469,7 +469,7 @@ trotzdem mit drei parallel laufenden Aufgaben; Updates aus den Nebenthreads
 laufen ausschließlich über den Dispatcher mit einem Delegaten
 (<span class="mono">UpdateGUI</span>, Prüfung mit
 <span class="mono">Dispatcher.CheckAccess()</span>, sonst
-<span class="mono">BeginInvoke</span>) — direkte GUI-Zugriffe aus Threads
+<span class="mono">BeginInvoke</span>) - direkte GUI-Zugriffe aus Threads
 würden eine <span class="mono">InvalidOperationException</span> auslösen:
 </p>
 <div class="abbildung">
@@ -503,7 +503,7 @@ würden eine <span class="mono">InvalidOperationException</span> auslösen:
   <text x="515" y="93" font-size="11" fill="#2e6da4">Dispatcher.BeginInvoke(UpdateGUI)</text>
   <text x="515" y="173" font-size="11" fill="#2e6da4">Dispatcher.BeginInvoke(UpdateGUI)</text>
 </svg>
-<div class="bildtext">Abbildung 5: Drei Threads, ein GUI-Zugriffsweg — alle Nebenthreads melden sich nur über den Dispatcher (VL6/E6).</div>
+<div class="bildtext">Abbildung 5: Drei Threads, ein GUI-Zugriffsweg - alle Nebenthreads melden sich nur über den Dispatcher (VL6/E6).</div>
 </div>
 <p class="klein">
 Beendet wird kontrolliert mit boolschen Flags (<span class="mono">ThreadsRunning</span>,
@@ -553,7 +553,7 @@ Steuerbefehl oder Arming vor dem abgeschlossenen Handshake gesendet werden:
 Im Code: <span class="mono">QuadroControl.Core/Communication/CommStateMachine.cs</span>.
 Jeder unzulässige Übergang (z.&nbsp;B. „Arming nur mit aktivem Heartbeat möglich“)
 wirft eine <span class="mono">InvalidOperationException</span>, die in der GUI
-als Meldung erscheint — nie als still gesendeter Motorwert. Der
+als Meldung erscheint - nie als still gesendeter Motorwert. Der
 Controller-Thread sendet nur, wenn <span class="mono">CanSendControlCommands</span>
 wahr ist.
 </p>
@@ -575,12 +575,12 @@ wahr ist.
   <tr>
     <td><b>Neutralbefehl ohne Eingabe</b></td>
     <td>PROG-011</td>
-    <td>Sobald kein Stick über der Totzone (±2500) und keine Taste/Trigger anliegen, sendet die App einen <span class="mono">ManualControlCommand</span> mit allen Werten 0 — „der letzte Wert klebt nicht“, die Rotoren stehen still.</td>
+    <td>Sobald kein Stick über der Totzone (±2500) und keine Taste/Trigger anliegen, sendet die App einen <span class="mono">ManualControlCommand</span> mit allen Werten 0 - „der letzte Wert klebt nicht“, die Rotoren stehen still.</td>
   </tr>
   <tr>
     <td><b>Eindeutige Arming-Anzeige</b></td>
     <td>PROG-010A</td>
-    <td>LED-Bild aus der Vorlage (<span class="mono">LED_grn.png</span> leuchtet im Zustand „Armed“, <span class="mono">LED_aus.png</span> dunkel) <b>plus</b> farbiger Text: <span class="led gruen"></span> grün „Armed“ / <span class="led aus"></span> rot „Disarmed“. Die Umschaltung folgt demselben Textfeld, das auch das Code-Behind setzt — keine abweichende Doppelbelegung möglich.</td>
+    <td>LED-Bild aus der Vorlage (<span class="mono">LED_grn.png</span> leuchtet im Zustand „Armed“, <span class="mono">LED_aus.png</span> dunkel) <b>plus</b> farbiger Text: <span class="led gruen"></span> grün „Armed“ / <span class="led aus"></span> rot „Disarmed“. Die Umschaltung folgt demselben Textfeld, das auch das Code-Behind setzt - keine abweichende Doppelbelegung möglich.</td>
   </tr>
   <tr>
     <td><b>Definiertes Arming</b></td>
@@ -595,12 +595,12 @@ wahr ist.
   <tr>
     <td><b>Vollständigkeit der Steuerbefehle</b></td>
     <td>E2, PROG-011</td>
-    <td>Jeder Steuerbefehl enthält alle 9 Felder in fester Reihenfolge; unbenutzte Felder werden aktiv auf 0 gesetzt; Thrust wird intern zwangsweise mit Throttle synchronisiert — es kann kein Feld mit Alt-Wert „stehen bleiben“.</td>
+    <td>Jeder Steuerbefehl enthält alle 9 Felder in fester Reihenfolge; unbenutzte Felder werden aktiv auf 0 gesetzt; Thrust wird intern zwangsweise mit Throttle synchronisiert - es kann kein Feld mit Alt-Wert „stehen bleiben“.</td>
   </tr>
   <tr>
     <td><b>Hinweis in der GUI (Programm 2)</b></td>
     <td>F1</td>
-    <td>Dauerhafter Warnhinweis „nur propellerlos testen“ im Fenster des Real-Programms — die Motoren können sich ungeplant in Betrieb setzen.</td>
+    <td>Dauerhafter Warnhinweis „nur propellerlos testen“ im Fenster des Real-Programms - die Motoren können sich ungeplant in Betrieb setzen.</td>
   </tr>
 </table>
 <p class="klein">
@@ -628,10 +628,13 @@ dem realen FC bleibt dennoch unerlässlich). Der Demonstrator
 </ol>
 <div class="hinweis">
 <b>Grenzen der Linux-Build-VM (ehrliche Selbsteinschätzung):</b> Der Logikkern
-und die 79 Unit-Tests laufen und bestehen auf der Build-VM; die beiden
-WPF-Anwendungen und das Laufzeitverhalten der Kurs-DLLs (CRC-Anhang, Testumgebung)
-können dagegen <b>nur auf einem Windows-PC mit Visual Studio 2019</b> geprüft
-werden. Alle dort nötigen Schritte stehen als nummerierte Checkliste in
+(385 Unit-Tests) <b>und die Kompilierung beider WPF-Anwendungen</b> (komplette
+Solution, 0 Fehler, inkl. XAML-Markup-Kompilierung; beide .exe entstehen) sind
+auf der Build-VM verifiziert (seit 29.10., SDK-style-csproj mit
+<span class="mono">EnableWindowsTargeting</span>). Das <b>Laufzeitverhalten</b>
+(GUI starten, Kurs-DLLs live, virtuelle Testumgebung, Quadrocopter.exe, echter
+FC) ist dagegen <b>nur auf einem Windows-PC mit Visual Studio 2019</b> prüfbar.
+Alle dort nötigen Schritte stehen als nummerierte Checkliste in
 <span class="mono">docs/windows-testplan.md</span>.
 </div>
 <div class="gefahr">
@@ -641,8 +644,46 @@ LibrePilot nach Endkonfiguration auf max. 0,3 bei 100 % Input einstellen
 (PROG-004A).
 </div>
 
+
+<h2 id="abweichungen">13. Abweichungen von den Aufgaben-Vorgaben <span class="id">(Transparenz)</span></h2>
+<p>Jede Abweichung vom Build-/Test-Auftrag wird protokolliert (vollständige Fassung mit
+Begründungen: <span class="mono">ABWEICHUNGEN.md</span>). Keine Abweichung verletzt eine
+Festforderung des Lastenhefts oder harte Kriterien (PROG-001 bis PROG-011A, E1-E8):</p>
+<table>
+<tr><th>#</th><th>Bereich</th><th>Abweichung (Kurzfassung)</th></tr>
+<tr><td>1</td><td>DLL-API</td><td>Methode heißt real <span class="mono">HoleAktuelleCOMPorts()</span> (COM groß), Reflektion der Original-DLL schlägt Foliennotation</td></tr>
+<tr><td>2</td><td>Prüfkriterium</td><td>eingefrorener Beispiel-Vektor ist -1.0 (Disarming), nicht +1.0; Bytes wurden als bindend getestet, +1.0 separat</td></tr>
+<tr><td>3</td><td>Build</td><td>Core ist Multi-Target netstandard2.0 + net452 (net452-Apps können kein netstandard2.0 laden)</td></tr>
+<tr><td>4</td><td>Build</td><td>.gitignore strikter: libs/ und .vorlage-ref/ komplett ignoriert (Kurs-Binärdateien bleiben aus dem öffentlichen Repo)</td></tr>
+<tr><td>5</td><td>Build</td><td>WPF-Apps referenzieren Core mit SetTargetFramework=net452 (Multi-Target-Eindeutigkeit)</td></tr>
+<tr><td>6</td><td>Build</td><td>SharpDX.XInput als PackageReference statt packages.config (VS2019-kompatibel)</td></tr>
+<tr><td>7</td><td>Prozess</td><td>P2 lieferte nur Platzhalter-GUI; visuelles Design machte bewusst der separate UI-Pass (P3)</td></tr>
+<tr><td>8</td><td>Architektur</td><td>IQuadroTransport liegt im Core (Logikkern bleibt DLL-frei und testbar), Adapter in den Apps</td></tr>
+<tr><td>9</td><td>Build</td><td>Core-csproj trägt explizite ProjectGuid (VS2019-ProjectReference-Auflösung)</td></tr>
+<tr><td>10</td><td>Protokoll</td><td>Metadaten-Handshake-Strings behalten Kleinschreibung (wortwörtliche VL5-Übernahme; DLL parst Hex unabhängig von Groß/Kleinschreibung)</td></tr>
+<tr><td>11</td><td>GUI</td><td>kein rotes LED-Bild im Kursmaterial vorhanden: Armed/Disarmed = LED_grün/LED_aus + farbige Schrift + Text (PROG-010A trotzdem eindeutig erfüllt)</td></tr>
+<tr><td>12</td><td>Build</td><td>LED-Bilder als Resource ins csproj aufgenommen (XAML-Pack-URI lädt sonst nur zur Laufzeit auf Windows)</td></tr>
+<tr><td>13</td><td>Verhalten</td><td>ToPayload() klemmt Werte nicht und wirft keine Exception (durchgereichte IEEE-Bits); Bereichswahrung liegt beim Aufrufer, ControllerMapping klemmt nachweislich</td></tr>
+<tr><td>14</td><td>Scope</td><td>Trigger (0-255) haben keine Core-Abbildung: reine GUI-Anzeige, keine Steuerfunktion laut Controllerbelegung</td></tr>
+<tr><td>15</td><td>Prüfkriterium</td><td>Mittelstellung Throttle = 32768/65535 exakt (Dokumentformel), nicht exakt 0.5; Roll/Pitch/Yaw-Mitte = exakt 0.0</td></tr>
+<tr><td>16</td><td>Wissen</td><td>Regel „ObjectIDMeta = ObjectID + 1" aus VL5 gilt nicht für Multi-Instance-Objekte (siehe Abschnitt 14); Code nutzt die wortwörtlichen Handshake-Strings</td></tr>
+</table>
+
+<h2 id="kursfehler">14. Fehlerhafte Angaben und Inkonsistenzen in den Kursunterlagen</h2>
+<p>Beim vollständigen Auswerten des OPAL-Kurses und beim Verifizieren gegen die
+Test-Suite gefunden. Auflösung jeweils kursiv; Grundlagen-Konflikt-Regel:
+Original-Quellen (quellen/) gewinnen, wortwörtliche Byte-Vorgaben sind bindend.</p>
+<table>
+<tr><th>Fundort</th><th>Was nicht stimmt / inkonsistent ist</th><th>Auflösung im Projekt</th></tr>
+<tr><td>VL5, UAVObjects-Folie</td><td><b>„ObjectIDMeta = ObjectID + 1"</b> stimmt nur für Single-Instance-Objekte: ManualControlCommand Meta = +1, aber AccessoryDesired Meta = <b>+2</b> (C4 09 98 5C statt C4 09 98 5B), LibrePilot-Konvention für mehrfach instanziierte Objekte. Die Folie widerspricht damit ihren eigenen Metadaten-Strings zwei Folien später.</td><td><i>Die wortwörtlichen Handshake-Strings sind im Code konstant hinterlegt (nie abgeleitet); T5 testet beide Strings als unabhängige Literale. Wissensdatei korrigiert.</i></td></tr>
+<tr><td>VL5, Beispielnachricht Folie 20 vs. Folie 35</td><td>Die ausgeschriebene Beispiel-Nachricht endet auf <span class="mono">80 BF</span> = IEEE-754 <b>-1.0</b> (Disarming-Wert), während Folie 35 dieselbe Nachricht als Beispiel für <b>AccessoryVal = 1.0</b> (Arming) ankündigt. Wer die Folie-20-Hex als Arming kopiert, disarmed.</td><td><i>Bytes sind bindend; beide Wertebilder (+1.0 und -1.0) haben eigene Tests mit unabhängigen IEEE-Vektoren.</i></td></tr>
+<tr><td>FC_Konfiguration_SoSe2020.pdf, Abschnitt IV</td><td>Throttle-Curve-Screenshot zeigt Kurven-Maximum <b>0,40</b>; das Lastenheft (PROG-004A, Festforderung) fordert <b>max. 0,3</b> bei 100 % Input.</td><td><i>Lastenheft ist bindend: 0,3. Widerspruch in Wissensdatei und Kriteriendatei dokumentiert.</i></td></tr>
+<tr><td>OPAL, Wichtige Dokumente</td><td>Zwei Lastenheft-Fassungen parallel (Lastenheft_Interd_PE_221012.pdf veraltet, Lastenheft_Interd_PE.pdf aktuell mit ELEK-003A/B vom 26.10.2026), ohne Kennzeichnung, welche gilt.</td><td><i>Die aktuelle Fassung (Änderungsdatum 26.10.2026 in der Anforderungsliste) wurde verwendet; veraltete Fassung im Projekt markiert.</i></td></tr>
+<tr><td>Interd_PE_LV_Planung_WS26_OPAL.pdf vs. OPAL-Kursstruktur</td><td>Der Planungs-PDF tauscht die Vorlesungsnummern: dort VL3=Additive Fertigung, VL4=Elektrokonstruktion; im OPAL-Kurs und in den Skripten ist es umgekehrt (VL3=Elektrokonstruktion, VL4=Additive).</td><td><i>OPAL-Kursstruktur und Skript-Dateinamen sind führend; Referenzen im Projekt nutzen die OPAL-Reihenfolge.</i></td></tr>
+<tr><td>UE4 vs. VL6, Zielprogramm-GUI</td><td>Unterschiedliche Elementnamen für die Controller-Funktion: UE4 nennt den Button <span class="mono">BT_XBoxRead</span>, das VL6-Zielprogramm <span class="mono">BT_XBoxStart</span>.</td><td><i>Die UE4-Namenskonvention wurde umgesetzt (UE4 ist die Programmier-Übung); VL6-Name nur in dessen Lesen-Beispiel relevant.</i></td></tr>
+</table>
 <div class="fusszeile">
-IPE-Quadrocopter — Programmerläuterung &middot; erzeugt als selbstständige
+IPE-Quadrocopter - Programmerläuterung &middot; erzeugt als selbstständige
 HTML-Datei (ohne externe Ressourcen; offline darstellbar) &middot;
 Stand: 28.10.2026 &middot; Quelle der technischen Angaben: Quelltext der
 Lösung (QuadroControl.Core, QuadroControl.Virtuell, QuadroControl.Real)
