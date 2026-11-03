@@ -14,20 +14,15 @@
         /// <summary>
         /// Anzahl der MCC-Nachrichten mit Throttle = -1 / Thrust = -1 im
         /// Arming-Burst (VL5: "mehrmals hintereinander schreiben").
-        /// Live-Analyse der vKTCQuadroControl.dll (03.11.2026, dekompiliert):
-        /// die DLL legt einen 50 Einträge tiefen ThrottleList-Puffer an und
-        /// schaltet erst bei Summe -50 (50 konsekutive MCCs mit Throttle -1)
-        /// von Arming_Vorgemerkt auf Arming_Aktiv; jeder neutrale MCC vorher
-        /// bricht ab. Deshalb 55 (50 + Reserve), AccessoryDesired geht mittig.
+        /// Live-Analyse der vKTCQuadroControl.dll (03.11.2026, dekompiliert +
+        /// Zustands-Dump per Reflexion): die DLL puffert die letzten 50 MCC-
+        /// Throttle-Werte und setzt Arming nur vorübergehend (Vorgemerkt), wenn
+        /// AccessoryDesired=1 eintrifft; der nächstfolgende MCC entscheidet:
+        /// ThrottleList-Summe -50 (50 konsekutive -1) -> Arming_Aktiv, sonst
+        /// Abbruch. Deshalb: 55x MCC(-1), DANN AccessoryDesired, DANN nochmal
+        /// MCC(-1) als abschließende Nachricht (siehe ArmingSequenz).
         /// </summary>
         public const int ArmingRepeatCount = 55;
-
-        /// <summary>
-        /// Position der AccessoryDesired-Nachricht im Arming-Burst (0-basiert).
-        /// Die DLL verlangt: letzter MCC vor AccessoryDesired hat Throttle -1
-        /// und der Burst läuft danach weiter, bis 50 konsekutive -1 erreicht sind.
-        /// </summary>
-        public const int ArmingAccessoryIndex = 4;
 
         /// <summary>Pause zwischen den Arming-Wiederholungen in Millisekunden.</summary>
         public const int ArmingRepeatDelayMs = 50;

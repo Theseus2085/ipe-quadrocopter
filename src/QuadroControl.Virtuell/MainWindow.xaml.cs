@@ -373,21 +373,23 @@ namespace QuadroControl.Virtuell
         {
             if (_commState.State != CommState.HeartbeatActive) return; // Maschine schützt
 
-            // Reihenfolge nach Live-Analyse der vKTCQuadroControl.dll: die DLL
-            // merkt sich Arming nur, wenn der letzte MCC vor AccessoryDesired
-            // Throttle -1 hat, und schaltet erst nach 50 konsekutiven MCCs mit
-            // Throttle -1 auf Arming_Aktiv -> AccessoryDesired mittig senden.
+            // Reihenfolge nach Live-Analyse der vKTCQuadroControl.dll
+            // (Zustands-Dump 03.11.2026): die DLL puffert die letzten 50 MCC-
+            // Throttle-Werte. AccessoryDesired=1 setzt nur Arming_Vorgemerkt;
+            // der NÄCHSTE MCC entscheidet: Summe -50 -> Arming_Aktiv, sonst
+            // Abbruch. Deshalb: erst 55x MCC(-1) (Ring voll), dann
+            // AccessoryDesired, dann ein weiteren MCC(-1) als Abschluss.
             for (int i = 0; i < QuadroConfig.ArmingRepeatCount; i++)
             {
                 _transport.SchickeHexString(
                     MessageFactory.BuildManualControlCommand(ManualControlCommandData.ForArming()));
-                if (i == QuadroConfig.ArmingAccessoryIndex)
-                {
-                    _transport.SchickeHexString(
-                        MessageFactory.BuildAccessoryDesired(AccessoryDesiredData.ArmingValue));
-                }
                 Thread.Sleep(QuadroConfig.ArmingRepeatDelayMs);
             }
+            _transport.SchickeHexString(
+                MessageFactory.BuildAccessoryDesired(AccessoryDesiredData.ArmingValue));
+            // Abschließender MCC(-1): löst den Übergang Vorgemerkt -> Arming_Aktiv aus
+            _transport.SchickeHexString(
+                MessageFactory.BuildManualControlCommand(ManualControlCommandData.ForArming()));
 
             try
             {

@@ -26,11 +26,27 @@
 
 Live-Runtime-Test auf der Azure-Windows-VM gegen die echte vKTCQuadroControl.dll +
 Quadrocopter.exe: Arming blieb wirkungslos (Testumgebung zeigte Armed, DLL/Simulator nicht).
-Dekompilierung der Kurs-DLL (ServerClient/Logik): die DLL puffert die letzten 50
-ManualControlCommand-Throttle-Werte (ThrottleList) und schaltet erst bei Summe -50
-(50 konsekutive MCCs mit Throttle -1) von Arming_Vorgemerkt auf Arming_Aktiv; jeder
-neutrale MCC vorher bricht ab. AccessoryDesired (Arming=1) muss zudem ankommen, während
-der letzte MCC Throttle -1 hatte (und Handshake-Stufe MetaDaten2 + Heartbeat aktiv sind).
-Konsequenz: ArmingRepeatCount 5 -> 55, AccessoryDesired wird jetzt mittig im Burst
-gesendet (ArmingAccessoryIndex = 4), T9/T10 entsprechend angepasst (Mission jetzt
-70 Nachrichten). Korrektur durch echten Integrationsbefund, kein Spekulationsfix.
+Dekompilierung der Kurs-DLL + Zustands-Dump per Reflexions-Harness (DLL in eigenem
+Konsolenprogramm betrieben, private Statusfelder mitgelesen):
+- Die DLL puffert die letzten 50 ManualControlCommand-Throttle-Werte (ThrottleList).
+- AccessoryDesired(Arming=1) setzt nur Arming_Vorgemerkt, WENN zuletzt ein MCC mit
+  Throttle -1 ankam und Handshake-Stufe MetaDaten2 + Heartbeat aktiv sind.
+- Der NAECHSTE MCC entscheidet: ThrottleList-Summe -50 (50 konsekutive -1) ->
+  Arming_Aktiv, sonst Abbruch auf Disarming_Aktiv. AccDes mittig im Burst reicht
+  daher NICHT (erster Zwischen-Test scheiterte genau so).
+Korrekte Sequenz: 55x MCC(-1), DANN AccessoryDesired(+1), DANN noch ein MCC(-1)
+als abschliessende Nachricht. ArmingRepeatCount 5 -> 55, ArmingSequenz entsprechend,
+T9/T10 angepasst (Mission jetzt 71 Nachrichten). Bestaetigt: Armed/Disarmed live in
+allen drei Szenen (I Ebene, II Sporthalle, III Wiese) gegen den Unity-Simulator.
+
+## 18. DLL-Heartbeat-Timer: einmal abgelaufen = dauerhaft tot, Re-Handshake noetig (2026-11-03)
+
+Der Heartbeat-Timer der vKTCQuadroControl.dll (2000 ms) resettet bei Ablauf Handshake
+UND Heartbeat auf None/false und erholt sich NICHT von selbst: spaetere Heartbeats
+(Status 03) laufen in der Wiederaufbau-Kette ins Leere (Kette erwartet 00->01->03).
+Ausgeloest wurde der Ablauf im Test durch Lastspitzen (Szenenwechsel des Simulators
+auf 2 vCPU). Abhilfe im Betrieb: COMPort trennen -> verbinden -> FC initialisieren
+(live verifiziert, danach Arming in Szene II/III wieder moeglich). Beobachtung fuer
+Simons PC-Tests: bei unerwartetem Disarm/rote LED zuerst Re-Handshake versuchen.
+Nebenbeobachtung: ein einzelner B-Druck (Disarming) bei neutralen Sticks blieb einmal
+ohne Wirkung (vermutlich Dispatcher-Rennen), zweiter Druck wirkte sofort.

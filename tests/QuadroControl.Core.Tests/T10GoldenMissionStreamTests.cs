@@ -74,12 +74,12 @@ namespace QuadroControl.Core.Tests
             {
                 transport.SchickeHexString(
                     MessageFactory.BuildManualControlCommand(ManualControlCommandData.ForArming()));
-                if (i == QuadroConfig.ArmingAccessoryIndex)
-                {
-                    // DLL-Analyse: AccessoryDesired mittig, letzter MCC davor Throttle -1
-                    transport.SchickeHexString(MessageFactory.BuildAccessoryDesired(QuadroConfig.AccessoryArmingValue));
-                }
             }
+            // DLL-Analyse 03.11.: AccessoryDesired NACH dem vollen Burst, dann ein
+            // abschließender MCC(-1) loest Vorgemerkt -> Arming_Aktiv aus
+            transport.SchickeHexString(MessageFactory.BuildAccessoryDesired(QuadroConfig.AccessoryArmingValue));
+            transport.SchickeHexString(
+                MessageFactory.BuildManualControlCommand(ManualControlCommandData.ForArming()));
             sm.Arm();
 
             // Schritt 4b: Steuerkommandos (Muster Roll/Pitch/Yaw/Throttle)
@@ -116,11 +116,11 @@ namespace QuadroControl.Core.Tests
         // ---------- Gesamtform ----------
 
         [Fact]
-        public void Mission_Umfasst_Exakt_70_Nachrichten()
+        public void Mission_Umfasst_Exakt_71_Nachrichten()
         {
-            // 5 Handshake + 3 Heartbeat + 55 MCC + 1 AccessoryDesired + 3 Steuer + 1 Disarm + 2 Neutral
+            // 5 HS + 3 HB + 55 MCC(-1) + AccDes + finaler MCC(-1) + 3 Steuer + 1 Disarm + 2 Neutral = 71
             MissionErgebnis mission = MissionErzeugen();
-            Assert.Equal(70, mission.Nachrichten.Count);
+            Assert.Equal(71, mission.Nachrichten.Count);
         }
 
         [Fact]
@@ -186,14 +186,14 @@ namespace QuadroControl.Core.Tests
             }
         }
 
-        // ---------- Arming (MCC-Indizes 8-62, AccessoryDesired mittig bei 8+ArmingAccessoryIndex) ----------
+        // ---------- Arming (MCC 8-62, AccDes 63, finaler MCC 64) ----------
 
         [Theory]
         [InlineData(8)]
         [InlineData(9)]
-        [InlineData(11)]   // letzter MCC VOR AccessoryDesired (DLL: Throttle -1)
-        [InlineData(14)]   // erster MCC NACH AccessoryDesired (Position 13)
-        [InlineData(63)]   // letzter MCC des Bursts (50 konsekutive -1 erreicht)
+        [InlineData(11)]
+        [InlineData(62)]   // letzter Burst-MCC vor AccessoryDesired
+        [InlineData(64)]   // finaler MCC(-1) nach AccessoryDesired (Latch)
         public void Arming_Mcc_Throttle_Minus1_UND_Thrust_Minus1_Anzahl_Wie_Config(int index)
         {
             byte[] n = Parse(MissionErzeugen().Nachrichten[index]);
@@ -212,33 +212,33 @@ namespace QuadroControl.Core.Tests
         {
             MissionErgebnis mission = MissionErzeugen();
             string erstes = mission.Nachrichten[8];
-            int accIndex = 8 + QuadroConfig.ArmingAccessoryIndex + 1; // AccDes NACH dem MCC i==Index
             for (int i = 8; i < 8 + QuadroConfig.ArmingRepeatCount; i++)
             {
-                if (i == accIndex) continue; // mittig liegt AccessoryDesired
-                Assert.Equal(erstes, mission.Nachrichten[i]); // alle MCC identisch, keine Drift
+                Assert.Equal(erstes, mission.Nachrichten[i]);
             }
+            Assert.Equal(erstes, mission.Nachrichten[8 + QuadroConfig.ArmingRepeatCount + 1]); // finaler MCC
         }
 
         [Fact]
-        public void AccessoryDesired_Plus1_Liegt_Mittig_Im_Mcc_Burst()
+        public void AccessoryDesired_Plus1_Kommt_Nach_Dem_Burst_Danach_Finaler_Mcc()
         {
-            // DLL-Analyse 03.11.: AccDes muss ankommen, waehrend der letzte MCC
-            // Throttle -1 hatte, und der Burst laeuft danach weiter (50x -1).
+            // DLL-Analyse 03.11. (Zustands-Dump): AccDes NACH >=50 konsekutiven
+            // MCC(-1); der naechste MCC(-1) loest Vorgemerkt -> Arming_Aktiv aus.
             MissionErgebnis mission = MissionErzeugen();
-            int accIndex = 8 + QuadroConfig.ArmingAccessoryIndex + 1; // AccDes NACH dem MCC i==Index
+            int accIndex = 8 + QuadroConfig.ArmingRepeatCount; // 63
             Assert.Equal(ArmingVektor, mission.Nachrichten[accIndex]);
-            Assert.StartsWith("3C 20 0E 00 5A 98 09 C4 00 00", mission.Nachrichten[accIndex]); // AccessoryDesired-Header, Length 14
+            Assert.StartsWith("3C 20 0E 00 5A 98 09 C4 00 00", mission.Nachrichten[accIndex]);
+            Assert.Equal(mission.Nachrichten[8], mission.Nachrichten[accIndex + 1]); // finaler MCC(-1)
         }
 
-        // ---------- Steuerkommandos (Indizes 64-66) ----------
+        // ---------- Steuerkommandos (Indizes 65-67) ----------
 
         [Fact]
         public void Steuerkommando_1_Muster_Roll_Pitch_Yaw_Throttle()
         {
             // rechtsX=32767 -> Roll=+1, rechtsY=-32767 -> Pitch=-1, linksX=0 -> Yaw~0,
             // linksY=16384 -> Throttle ~0.75
-            byte[] n = Parse(MissionErzeugen().Nachrichten[64]);
+            byte[] n = Parse(MissionErzeugen().Nachrichten[65]);
             Assert.Equal("3C 20 38 00 80 74 10 C4 00 00", Erste10(n));
             Assert.InRange(FloatAn(n, 0), 0.7499f, 0.7501f); // Throttle ~0.75
             Assert.Equal(1f, FloatAn(n, 4));                 // Roll = +1
@@ -252,7 +252,7 @@ namespace QuadroControl.Core.Tests
         {
             // linksX=-32767 -> Yaw=-1, linksY=32767 -> Throttle=1,
             // rechtsX=-32767 -> Roll=-1, rechtsY=32767 -> Pitch=+1
-            byte[] n = Parse(MissionErzeugen().Nachrichten[65]);
+            byte[] n = Parse(MissionErzeugen().Nachrichten[66]);
             Assert.Equal(1f, FloatAn(n, 0));   // Throttle
             Assert.Equal(-1f, FloatAn(n, 4));  // Roll
             Assert.Equal(1f, FloatAn(n, 8));   // Pitch
@@ -262,7 +262,7 @@ namespace QuadroControl.Core.Tests
         [Fact]
         public void Steuerkommando_3_Nur_Yaw_Ausschlag_Rest_Neutral()
         {
-            byte[] n = Parse(MissionErzeugen().Nachrichten[66]);
+            byte[] n = Parse(MissionErzeugen().Nachrichten[67]);
             // linksX=8192 -> Yaw = 8192/32767 ~ 0.25001
             Assert.InRange(FloatAn(n, 12), 0.2499f, 0.2501f);
             // linksY=0 -> Throttle = 32768/65535 ~ 0.5000076 (Mittelstellung ~ halbes Gas)
@@ -273,17 +273,17 @@ namespace QuadroControl.Core.Tests
             Assert.Equal(FloatAn(n, 0), FloatAn(n, 20));
         }
 
-        // ---------- Disarming + Neutral (Indizes 67-69) ----------
+        // ---------- Disarming + Neutral (Indizes 68-70) ----------
 
         [Fact]
         public void Disarm_Ist_AccessoryDesired_Minus1()
         {
-            Assert.Equal(DisarmingVektor, MissionErzeugen().Nachrichten[67]);
+            Assert.Equal(DisarmingVektor, MissionErzeugen().Nachrichten[68]);
         }
 
         [Theory]
-        [InlineData(68)]
         [InlineData(69)]
+        [InlineData(70)]
         public void Die_Zwei_Neutralen_Mcc_mit_46_Nullbytes(int index)
         {
             byte[] n = Parse(MissionErzeugen().Nachrichten[index]);

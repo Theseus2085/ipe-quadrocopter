@@ -97,3 +97,22 @@ Alle Phasen P0-P7 des BUILD-AUFTRAG.md abgeschlossen: komplette Solution mit Cor
 - OFFEN: Xbox-Controller-Emulation (ViGEm) fuer Controller lesen / Arming A+B / Steuerwerte;
   Quadrocopter.exe-Szenen-Simulator fehlt weiterhin (OPAL oder Simons PC);
   Real-App nur statisch deployt, runtime nur mit echtem FC moeglich.
+
+## Azure-VM — Volltest virtuelle Testumgebung inkl. Szenen I-III (03.11.2026, Tag-Session)
+
+- Umfang: Quadrocopter.exe (Unity-Simulator) aus dem OPAL-NC-Spiegel auf die VM
+  deployed (kein OPAL-Login noetig); Steuerung komplett headless von der Hermes-VM
+  (RDP + SSH + GUI-Automatisierung).
+- Xbox-Controller-Emulation ohne Treiberinstallation: ViGEm hingt -> stattdessen
+  eigene XINPUT1_4.dll (mingw, x64, statisch gelinkt) neben der Exe + gepatchte
+  SharpDX.XInput.dll (Import-Namen xinput1_4/1_3/9_1_0 -> xinput_99/98/97_0,
+  gleiche Laenge, Full-Trust-Laod ohne Strong-Name-Verify). Zustand per ctrl.txt.
+- PROTOKOLL-BRUECKE geklaert (dekompiliert): DLL sendet alle 20 ms 8 Floats an
+  TCP 4444 des Simulators; float[7] = Arming-Status (2=Armed, 3=Disarmed).
+- ERGEBNIS Szenen-Fluege: I Ebene (H 22,7 m, D 24,2 m), II Sporthalle (nach
+  Re-Handshake, H 73 m), III Wiese (H 0,4 km) - jeweils Armed gruen, Flug per
+  virtuellem Stick, Disarm rot + Timer-Stopp. Screenshots in der Session-Log.
+- Bugs gefixt: Arming-Sequenz (ABWEICHUNGEN 17, DLL-Kontrakt 50x MCC(-1) +
+  AccDes + finaler MCC), Heartbeat-Timer-Degeneration dokumentiert (18).
+- 385/385 Unit-Tests gruen nach Anpassung (T9/T10 auf neue Sequenz).
+- OFFEN bleibt: Real-App mit echtem FC an Simons PC (propellerlos, F1).
