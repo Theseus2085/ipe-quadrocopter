@@ -21,3 +21,16 @@
 | 14 | T8 | TEST-AUFTRAG T8 nennt Trigger-Grenzwerte (0, 128, 255) als Testgegenstand | In Core existiert KEINE Trigger-Abbildung: `ControllerMapping` mappt ausschließlich die 4 Stick-Achsen; Trigger sind laut `docs/controllerbelegung.md` („Nicht belegte Eingaben“) nur GUI-Anzeige (0–255), keine Steuerfunktion. Für Core ist kein Trigger-API testbar; Stick-Grenzwerte (-32768/0/32767) vollständig getestet. Trigger-Verhalten wäre nur in den WPF-Apps testbar (nicht Scope, Core bleibt dll-/GUI-frei). |
 | 15 | T8 | TEST-AUFTRAG T8 erwartet „Neutralstellung ergibt exakt 0.0 bzw. 0.5 je Feld“ | Bindend ist die Formel aus `docs/controllerbelegung.md`: Throttle = (raw+32768)/65535. Bei Rohwert 0 ergibt das 32768/65535 ≈ 0.5000076 — float-exakt dieser Wert, nicht exakt 0.5 (nur die Yaw/Roll/Pitch-Mittelstellung ist exakt 0.0). Test assertet die Dokumentformel PLUS unabhängigen Bereich 0.4999–0.5001. Kein Core-Bug; „exakt 0.5“ wäre nur mit anderer Formel (raw/65535+0.5) erreichbar, die der Doku widerspräche. |
 | 16 | T5 | wissen §6 behauptet „ObjectIDMeta = ObjectID + 1“ | Passt nur auf ManualControlCommand (C4 10 74 80 → Meta C4 10 74 81, LSB +1), NICHT auf AccessoryDesired (C4 09 98 5A → Meta C4 09 98 5C, LSB +2 — LibrePilot-Konvention für multi-instance-Objekte, ACC ist laut wissen §6 „mehrfach instanziiert“). Bindend sind die wortwörtlichen VL5-Folien-Strings (BUILD-AUFTRAG „copy byte-for-byte, never retype“) — genau die sind in T5 als unabhängige Literale gegen die Konstanten getestet. Kein Code-Fehler; Hintergrundnotiz aus wissen §6 unvollständig. |
+
+## 17. Arming-Sequenz: DLL verlangt 50 konsekutive MCCs mit Throttle -1 (2026-11-03)
+
+Live-Runtime-Test auf der Azure-Windows-VM gegen die echte vKTCQuadroControl.dll +
+Quadrocopter.exe: Arming blieb wirkungslos (Testumgebung zeigte Armed, DLL/Simulator nicht).
+Dekompilierung der Kurs-DLL (ServerClient/Logik): die DLL puffert die letzten 50
+ManualControlCommand-Throttle-Werte (ThrottleList) und schaltet erst bei Summe -50
+(50 konsekutive MCCs mit Throttle -1) von Arming_Vorgemerkt auf Arming_Aktiv; jeder
+neutrale MCC vorher bricht ab. AccessoryDesired (Arming=1) muss zudem ankommen, während
+der letzte MCC Throttle -1 hatte (und Handshake-Stufe MetaDaten2 + Heartbeat aktiv sind).
+Konsequenz: ArmingRepeatCount 5 -> 55, AccessoryDesired wird jetzt mittig im Burst
+gesendet (ArmingAccessoryIndex = 4), T9/T10 entsprechend angepasst (Mission jetzt
+70 Nachrichten). Korrektur durch echten Integrationsbefund, kein Spekulationsfix.

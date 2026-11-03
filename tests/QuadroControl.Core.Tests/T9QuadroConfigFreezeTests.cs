@@ -21,11 +21,14 @@ namespace QuadroControl.Core.Tests
         }
 
         [Fact]
-        public void ArmingRepeatCount_Ist_5()
+        public void ArmingRepeatCount_Ist_55()
         {
             // E5/VL5: ManualControlCommand mit Throttle=-1 "mehrfach" schreiben;
             // Projektentscheidung (controllerbelegung.md): genau 5x
-            Assert.Equal(5, QuadroConfig.ArmingRepeatCount);
+            // Live-Analyse vKTCQuadroControl.dll (03.11.2026): die DLL fordert
+            // 50 konsekutive MCCs mit Throttle -1 (ThrottleList-Summe -50);
+            // ArmingRepeatCount 5 war zu kurz, Arming wurde immer abgebrochen.
+            Assert.Equal(55, QuadroConfig.ArmingRepeatCount);
         }
 
         [Fact]
