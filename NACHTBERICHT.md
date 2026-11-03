@@ -74,3 +74,26 @@ Alle Phasen P0-P7 des BUILD-AUFTRAG.md abgeschlossen: komplette Solution mit Cor
 - **Push + Verifikation**: `main` fb81dda..979fab8 (fast-forward), anonymes `ls-remote`: remote HEAD == lokal (`979fab8`), Commit-Anzahl remote 27 == lokal 27, Repo public.
 - Quota: Start 22:00 UTC 2 % (5h-Fenster), Ende 22:22 UTC 8 % (5h), wöchentlich 32 %.
 - Exit: Lock entfernt, Cron-Job „ipe Test-Suite Nachtbuild" deaktiviert (Auftrag einmalig erledigt).
+
+## Azure Windows-VM — Runtime-Smoke-Test Virtuell-App (03.11.2026)
+
+- VM: Azure for Students (Spendengeld-Abo, Ausgabenlimit AN), ipe-quadro-vm, SwedenCentral
+  (B-Serie fuer Studenten-Abos in DE/NL-Kapazitaetsregionen gesperrt), B2ls_v2 2vCPU/4GB,
+  Windows Server 2022 smalldisk, 64GB StandardSSD. Kosten ~0.05 USD/h. Details/creds:
+  lokale Datei HANDOFF-AZURE-VM.md (nicht im Repo).
+- Steuerung komplett von der Hermes-VM: az CLI (Device-Login), SSH (Pubkey via run-command),
+  GUI-Automatisierung headless RDP: Xvfb :99 + xfreerdp + xdotool + import-Screenshots.
+  App-Start im RDP-Session-Kontext via Scheduled Task MIT WorkingDirectory (notwendig!).
+- ERGEBNIS: QuadroControl.Virtuell.exe laeuft auf Windows Server 2022, komplette Kette live
+  getestet: COM3 verbinden -> 5-Nachrichten-Handshake -> "Handshake abgeschlossen,
+  Heartbeat aktiv (1/s)". State-Machine-Gate geprueft: Handshake ohne offenen Port wird
+  korrekt blockiert. Keine Crashes, Eventlog sauber.
+- FUND 1: Die Kurs-DLLs laden Bilder mit RELATIVEN Pfaden (LED_aus.png, LED_grn.png,
+  Logo_groс_transparent.png [kyrillisches c!], Logo_klein.png) aus dem ARBEITSVERZEICHNIS.
+  Ohne sie: System.ArgumentException in vGUI..ctor -> sofortiger Absturz. Linux-Build
+  kopiert die PNGs NICHT ins bin/. Deployment: alle PNGs neben die Exe UND CWD setzen.
+- FUND 2: schtasks ohne WorkingDirectory startet in System32 -> DLL findet Bilder nicht.
+  Fix: New-ScheduledTaskAction -WorkingDirectory (siehe HANDOFF-AZURE-VM.md).
+- OFFEN: Xbox-Controller-Emulation (ViGEm) fuer Controller lesen / Arming A+B / Steuerwerte;
+  Quadrocopter.exe-Szenen-Simulator fehlt weiterhin (OPAL oder Simons PC);
+  Real-App nur statisch deployt, runtime nur mit echtem FC moeglich.
