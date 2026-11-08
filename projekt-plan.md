@@ -29,7 +29,7 @@
 ## Offene Punkte
 
 - [x] Vorlage_VS.zip als Startpunkt sichern (in quellen/, Nachtbuild extrahiert sie)
-- [x] Entscheidung Steuerungskonzept: Mode-2-Belegung (links Y=GAS, links X=Gieren, rechts X=Rollen, rechts Y=Nicken; A=Arming, B=Disarming) — in BUILD-AUFTRAG.md fixiert
+- [x] Entscheidung Steuerungskonzept: D3v2-Belegung (R2=GAS, links X=Gieren, rechts X=Rollen, rechts Y=Nicken; links Y frei; A=Arming, B=Disarming) — in BUILD-AUFTRAG.md fixiert, ersetzt D3 (Mode-2) vom 28.10.
 - [x] GUI-Layout: UE4-Zielprogramm-Referenz (Screenshots ausgewertet)
 - [x] Sicherheitsfeatures konkretisiert (Controller-Loss→Auto-Disarm, Neutral-Befehle, Arming-LED, State-Gate)
 - [x] Kompletter Laufzeittest virtuelle Testumgebung (03.11.2026 auf Windows Server 2022, Szenen I–III)

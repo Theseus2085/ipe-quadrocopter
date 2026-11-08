@@ -203,7 +203,7 @@ Wertebereiche beachten: Trigger 0–255, Sticks ±32767 (Aufskalierung auf -1…
       // GUI-Elemente schreiben (Textbox1.Text = values[1]; ...)
   }
   ```
-- **Namenskonventionen der Vorlage/Übungen (sollte beibehalten werden):** Buttons `BT_*` (BT_COMPortVerbinde, BT_COMPortTrennen, BT_HS_HB, BT_XBoxRead/BT_XBoxStart), TextBoxen `TB_*` (TB_COMPort, TB_LeftTrigger, TB_AnalogRY, TB_ButtonA), Labels `Label_*` (Label_VerbindungStatus, Label_ArmingStatus). Für UE4 geforderte GUI-Elemente: COM-Port-Eingabe + Verbindungsstatus + Arming-Status + Buttons für die Kommunikationsschritte.
+- **Namenskonventionen der Vorlage/Übungen (sollte beibehalten werden):** Buttons `BT_*` (BT_COMPortVerbinde, BT_COMPortTrennen, BT_HS_HB, BT_XBoxRead/BT_XBoxStart), TextBoxen `TB_*` (TB_COMPort, TB_RightTrigger, TB_AnalogRY, TB_ButtonA), Labels `Label_*` (Label_VerbindungStatus, Label_ArmingStatus). Für UE4 geforderte GUI-Elemente: COM-Port-Eingabe + Verbindungsstatus + Arming-Status + Buttons für die Kommunikationsschritte.
 - **Entwicklungsablauf (VL6):** Algorithmus festlegen (umgangssprachlich / Programmablaufplan, Tool papdesigner) → Realisierung festlegen (GUI-Gestaltung, Threadstruktur) → Codieren → Testen (Testumgebung, dann FC) → Benutzen.
 
 ## 11. FC-/OPLink-Konfiguration mit LibrePilot (Anleitung FC_Konfiguration_SoSe2020.pdf)

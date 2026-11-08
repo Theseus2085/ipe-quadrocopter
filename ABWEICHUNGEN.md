@@ -50,3 +50,24 @@ auf 2 vCPU). Abhilfe im Betrieb: COMPort trennen -> verbinden -> FC initialisier
 Simons PC-Tests: bei unerwartetem Disarm/rote LED zuerst Re-Handshake versuchen.
 Nebenbeobachtung: ein einzelner B-Druck (Disarming) bei neutralen Sticks blieb einmal
 ohne Wirkung (vermutlich Dispatcher-Rennen), zweiter Druck wirkte sofort.
+
+## 19. Steuerungskonzept D3 (Mode-2) ersetzt durch D3v2: R2 = Gas (2026-11-08)
+
+Simon hat die Controllerbelegung geaendert (seine Entscheidung, kurskonform):
+R2 (rechter Trigger) = Throttle/Thrust, linker Stick X = Yaw, rechter Stick =
+Roll/Pitch, linker Stick Y unbenutzt. Das Lastenheft schreibt keine
+Achszuordnung vor (nur Geraet B2, UAVTalk-Wertebereiche E2, Tasten A/B laut
+UE4, Dokumentationspflicht C5) — siehe controllerbelegung.md.
+Damit wurde QuadroControl.Core (eingefroren) angeruehrt: ThrottleFromAxis/
+AxisMin entfernt, ThrottleFromTrigger + TriggerTotzone (10) + TriggerMax (255)
+neu, ToManualControlCommand-Signatur geaendert (leftStickY raus, rightTrigger
+rein). Kein Bugfix, sondern eine Simon-dirigierte Design-Aenderung; alle
+Aufrufstellen (beide MainWindow.xaml.cs inkl. TB_LeftTrigger->TB_RightTrigger-
+Umbenennung + GUI-Hinweistexte), T8/ControllerMappingTests/T10-Goldstream und
+saemtliche Doku (controllerbelegung, README, sicherheitsfeatures,
+klassendiagramm, TEST-AUFTRAG, BUILD-AUFTRAG, projekt-plan, wissen §10,
+erklaerung.html) mitgegangen. Build 0 Fehler, 394/394 Tests gruen.
+Trigger-Skalierung stetig: (t-10)/245 ab t>10, sonst exakt 0 (kein Sprung,
+Monotonie getestet). Ausstehend: Live-Nachtest auf der Windows-VM mit
+Fake-XInput-Trigger-Werten + Neuauflage des Release-ZIPs (aktuelles ZIP vom
+08.11. enthaelt noch Mode-2-Builds).

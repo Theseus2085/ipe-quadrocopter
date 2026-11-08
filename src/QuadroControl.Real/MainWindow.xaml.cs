@@ -262,8 +262,9 @@ namespace QuadroControl.Real
                         else
                         {
                             befehl = ControllerMapping.ToManualControlCommand(
-                                myState.Gamepad.LeftThumbX, myState.Gamepad.LeftThumbY,
+                                myState.Gamepad.LeftThumbX,
                                 myState.Gamepad.RightThumbX, myState.Gamepad.RightThumbY,
+                                myState.Gamepad.RightTrigger,
                                 controllerVerbunden);
 
                             // Arming nur über Taste A im Zustand HeartbeatActive;
@@ -469,9 +470,9 @@ namespace QuadroControl.Real
             }
 
             // Pflicht-Nutzung der DLL-Funktion KonvertiereFloatZuHexString:
-            // zeigt den aktuellen Gaswert (0…1) als UAVTalk-Float an.
+            // zeigt den aktuellen Gaswert (0…1, aus R2) als UAVTalk-Float an.
             string dllHex = _transport.KonvertiereFloatZuHexString(
-                ControllerMapping.ThrottleFromAxis(myState.Gamepad.LeftThumbY));
+                ControllerMapping.ThrottleFromTrigger(myState.Gamepad.RightTrigger));
 
             UpdateGUI(new[]
             {
@@ -480,7 +481,7 @@ namespace QuadroControl.Real
                 controllerVerbunden ? myState.Gamepad.LeftThumbY.ToString() : "-",
                 controllerVerbunden ? myState.Gamepad.RightThumbX.ToString() : "-",
                 controllerVerbunden ? myState.Gamepad.RightThumbY.ToString() : "-",
-                controllerVerbunden ? myState.Gamepad.LeftTrigger.ToString() : "-",
+                controllerVerbunden ? myState.Gamepad.RightTrigger.ToString() : "-",
                 tasten,
                 dllHex
             });
@@ -490,7 +491,7 @@ namespace QuadroControl.Real
         /// GUI-Aktualisierung nach VL6-Muster: Prüfung Dispatcher.CheckAccess(),
         /// sonst BeginInvoke mit dem Delegaten. values-Reihenfolge:
         /// [0] Verbindung, [1] Controller-Meldung, [2] Arming, [3] Links X,
-        /// [4] Links Y, [5] Rechts X, [6] Rechts Y, [7] LeftTrigger, [8] Tasten,
+        /// [4] Links Y, [5] Rechts X, [6] Rechts Y, [7] RightTrigger (R2), [8] Tasten,
         /// [9] DLL-Hex des Gaswerts.
         /// </summary>
         private void UpdateGUI(string[] values)
@@ -509,7 +510,7 @@ namespace QuadroControl.Real
             if (values[4] != null) TB_AnalogLY.Text = values[4];
             if (values[5] != null) TB_AnalogRX.Text = values[5];
             if (values[6] != null) TB_AnalogRY.Text = values[6];
-            if (values[7] != null) TB_LeftTrigger.Text = values[7];
+            if (values[7] != null) TB_RightTrigger.Text = values[7];
             if (values[8] != null) TB_ButtonA.Text = values[8];
             if (values.Length > 9 && values[9] != null) TB_DLLHex.Text = values[9];
         }

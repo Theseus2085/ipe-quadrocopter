@@ -135,8 +135,9 @@ classDiagram
     class ControllerMapping {
         <<statisch>>
         +AxisMax : short = 32767
-        +AxisMin : short = -32768
-        +ThrottleFromAxis(leftStickY)$ float
+        +TriggerMax : byte = 255
+        +TriggerTotzone : byte = 10
+        +ThrottleFromTrigger(rightTrigger)$ float
         +YawFromAxis(leftStickX)$ float
         +RollFromAxis(rightStickX)$ float
         +PitchFromAxis(rightStickY)$ float

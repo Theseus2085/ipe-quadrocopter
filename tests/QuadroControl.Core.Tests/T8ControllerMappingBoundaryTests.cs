@@ -6,15 +6,14 @@ namespace QuadroControl.Core.Tests
 {
     /// <summary>
     /// T8 (TEST-AUFTRAG): ControllerMapping — exakte Grenzwerte der XInput-Achsen
-    /// (-32768, 0, +32767), Mode-2-Zuordnung konsistent mit
-    /// docs/controllerbelegung.md (linksY=GAS, linksX=Gieren, rechtsX=Rollen,
-    /// rechtsY=Nicken), Neutralstellung, Monotonie/keine Spruenge.
-    /// HINWEIS: Trigger-Grenzwerte (0/128/255) sind in Core NICHT abgebildet —
-    /// Trigger sind laut controllerbelegung.md nicht belegt (siehe ABWEICHUNGEN.md).
+    /// (-32768, 0, +32767) und des rechten Triggers (0, Totzone, 255),
+    /// D3v2-Zuordnung konsistent mit docs/controllerbelegung.md
+    /// (R2=GAS, linksX=Gieren, rechtsX=Rollen, rechtsY=Nicken),
+    /// Neutralstellung, Monotonie/keine Spruenge.
     /// </summary>
     public class T8ControllerMappingBoundaryTests
     {
-        // ---------- Konstanten (XInput-Achsengrenzen) ----------
+        // ---------- Konstanten (XInput-Grenzen) ----------
 
         [Fact]
         public void AxisMax_Ist_32767()
@@ -23,45 +22,58 @@ namespace QuadroControl.Core.Tests
         }
 
         [Fact]
-        public void AxisMin_Ist_Minus32768()
+        public void TriggerMax_Ist_255()
         {
-            Assert.Equal(-32768, ControllerMapping.AxisMin);
-        }
-
-        // ---------- Throttle (linker Stick Y): 0..1 ----------
-
-        [Fact]
-        public void Throttle_Unterer_Anschlag_Minus32768_Liefert_Exakt_0()
-        {
-            Assert.Equal(0f, ControllerMapping.ThrottleFromAxis(-32768));
+            Assert.Equal(255, ControllerMapping.TriggerMax);
         }
 
         [Fact]
-        public void Throttle_Oberer_Anschlag_32767_Liefert_Exakt_1()
+        public void TriggerTotzone_Ist_10()
         {
-            // (32767+32768)/65535 = 65535/65535 = exakt 1.0 (float-exakt, da 65535=2^16-1)
-            Assert.Equal(1f, ControllerMapping.ThrottleFromAxis(32767));
+            Assert.Equal(10, ControllerMapping.TriggerTotzone);
+        }
+
+        // ---------- Throttle (R2, rechter Trigger): 0..1 ----------
+
+        [Fact]
+        public void Throttle_Ruhe_0_Liefert_Exakt_0()
+        {
+            Assert.Equal(0f, ControllerMapping.ThrottleFromTrigger(0));
         }
 
         [Fact]
-        public void Throttle_Neutralstellung_Roh_0_Liegt_Bei_Halbem_Gas_Nach_Dokumentformel()
+        public void Throttle_Totzonenrand_10_Liefert_Exakt_0()
         {
-            // controllerbelegung.md (bindende Formel): (raw+32768)/65535.
-            // Rohwert 0 -> 32768/65535 = 0.5000076... (float-arithmetisch exakt dieser Wert).
-            float wert = ControllerMapping.ThrottleFromAxis(0);
-            Assert.Equal(32768f / 65535f, wert); // Dokumentformel
-            Assert.InRange(wert, 0.4999f, 0.5001f); // unabhaengige Abschaetzung: ~halbes Gas
+            Assert.Equal(0f, ControllerMapping.ThrottleFromTrigger(10));
+        }
+
+        [Fact]
+        public void Throttle_Erster_Wirksamer_Wert_11_Liefert_Exakt_Dokumentformel()
+        {
+            // controllerbelegung.md (bindende Formel): (t-10)/(255-10) fuer t > 10.
+            // t=11 -> 1/245 = 0.004081...
+            float wert = ControllerMapping.ThrottleFromTrigger(11);
+            Assert.Equal(1f / 245f, wert); // Dokumentformel
+            Assert.InRange(wert, 0.004f, 0.005f); // unabhaengige Abschaetzung
+        }
+
+        [Fact]
+        public void Throttle_Oberer_Anschlag_255_Liefert_Exakt_1()
+        {
+            // (255-10)/245 = 245/245 = exakt 1.0
+            Assert.Equal(1f, ControllerMapping.ThrottleFromTrigger(255));
         }
 
         [Theory]
-        [InlineData(-32768)]
-        [InlineData(-16384)]
         [InlineData(0)]
-        [InlineData(16384)]
-        [InlineData(32767)]
-        public void Throttle_Bleibt_Im_Bereich_0_bis_1(short roh)
+        [InlineData(10)]
+        [InlineData(11)]
+        [InlineData(64)]
+        [InlineData(128)]
+        [InlineData(255)]
+        public void Throttle_Bleibt_Im_Bereich_0_bis_1(byte roh)
         {
-            float wert = ControllerMapping.ThrottleFromAxis(roh);
+            float wert = ControllerMapping.ThrottleFromTrigger(roh);
             Assert.True(wert >= 0f && wert <= 1f, "Throttle ausserhalb [0;1]: " + wert);
         }
 
@@ -108,14 +120,14 @@ namespace QuadroControl.Core.Tests
         // ---------- Monotonie ueber Stuetzstellen (keine Spruenge) ----------
 
         [Fact]
-        public void Throttle_Ist_Monoton_Ueber_Den_Gesamten_Achsbereich()
+        public void Throttle_Ist_Monoton_Ueber_Den_Gesamten_Triggerbereich()
         {
-            float vorher = ControllerMapping.ThrottleFromAxis(short.MinValue);
-            for (int roh = short.MinValue + 1; roh <= short.MaxValue; roh++)
+            float vorher = ControllerMapping.ThrottleFromTrigger(0);
+            for (int roh = 1; roh <= 255; roh++)
             {
-                float wert = ControllerMapping.ThrottleFromAxis((short)roh);
-                Assert.True(wert >= vorher, "Nicht monoton bei Rohwert " + roh);
-                Assert.True(wert - vorher <= 1.6e-5f, "Sprung bei Rohwert " + roh); // 1/65535 ~ 1.53e-5
+                float wert = ControllerMapping.ThrottleFromTrigger((byte)roh);
+                Assert.True(wert >= vorher, "Nicht monoton bei Triggerwert " + roh);
+                Assert.True(wert - vorher <= 1.1f / 245f, "Sprung bei Triggerwert " + roh); // 1/245 ~ 4.08e-3
                 vorher = wert;
             }
         }
@@ -133,64 +145,85 @@ namespace QuadroControl.Core.Tests
             }
         }
 
-        // ---------- Mode-2-Zuordnung (docs/controllerbelegung.md) ----------
+        // ---------- D3v2-Zuordnung (docs/controllerbelegung.md) ----------
 
         [Fact]
-        public void Mode2_Linker_Stick_Y_Ist_Throttle_Und_Thrust()
+        public void D3v2_R2_Ist_Throttle_Und_Thrust()
         {
-            // Beide Staebewerte gleich -> nur linker Stick Y treibt Throttle/Thrust
-            var cmd = ControllerMapping.ToManualControlCommand(0, 32767, 0, 0, true);
-            Assert.Equal(1f, cmd.Throttle); // Stick voll oben = voll Gas
+            // Trigger voll gezogen -> Throttle/Thrust = 1, Sticks neutral
+            var cmd = ControllerMapping.ToManualControlCommand(0, 0, 0, 255, true);
+            Assert.Equal(1f, cmd.Throttle); // R2 voll = voll Gas
             Assert.Equal(cmd.Throttle, cmd.Thrust); // Spiegel-Regel (wissen §6)
         }
 
         [Fact]
-        public void Mode2_Linker_Stick_X_Ist_Yaw()
+        public void D3v2_R2_Losgelassen_Ist_0_Gas()
         {
-            var cmd = ControllerMapping.ToManualControlCommand(-32767, 0, 0, 0, true);
-            Assert.Equal(-1f, cmd.Yaw);
-            Assert.Equal(0f, cmd.Roll);  // andere Achsen unberuehrt
-            Assert.Equal(0f, cmd.Pitch);
+            // Sicherheit: Trigger loslassen = 0 Gas (kein klebender Wert)
+            var cmd = ControllerMapping.ToManualControlCommand(0, 0, 0, 0, true);
+            Assert.Equal(0f, cmd.Throttle);
+            Assert.Equal(0f, cmd.Thrust);
         }
 
         [Fact]
-        public void Mode2_Rechter_Stick_X_Ist_Roll()
+        public void D3v2_Linker_Stick_X_Ist_Yaw()
         {
-            var cmd = ControllerMapping.ToManualControlCommand(0, 0, 32767, 0, true);
+            var cmd = ControllerMapping.ToManualControlCommand(-32767, 0, 0, 0, true);
+            Assert.Equal(-1f, cmd.Yaw);
+            Assert.Equal(0f, cmd.Roll);  // andere Felder unberuehrt
+            Assert.Equal(0f, cmd.Pitch);
+            Assert.Equal(0f, cmd.Throttle);
+        }
+
+        [Fact]
+        public void D3v2_Rechter_Stick_X_Ist_Roll()
+        {
+            var cmd = ControllerMapping.ToManualControlCommand(0, 32767, 0, 0, true);
             Assert.Equal(1f, cmd.Roll); // rechtsX -> Rollen
             Assert.Equal(0f, cmd.Yaw);
             Assert.Equal(0f, cmd.Pitch);
         }
 
         [Fact]
-        public void Mode2_Rechter_Stick_Y_Ist_Pitch()
+        public void D3v2_Rechter_Stick_Y_Ist_Pitch()
         {
-            var cmd = ControllerMapping.ToManualControlCommand(0, 0, 0, -32767, true);
+            var cmd = ControllerMapping.ToManualControlCommand(0, 0, -32767, 0, true);
             Assert.Equal(-1f, cmd.Pitch); // rechtsY -> Nicken
             Assert.Equal(0f, cmd.Roll);
             Assert.Equal(0f, cmd.Yaw);
         }
 
         [Fact]
-        public void Mode2_Volle_Achskombination_Jede_Achse_Ihr_Eigenes_Feld()
+        public void Throttle_Mittelstellung_128_Ist_Ca_Halbes_Gas()
         {
-            // Alle vier Staebewerte gleichzeitig, alle verschieden:
-            // linksX=-32767 (Yaw=-1), linksY=-32768 (Throttle=0),
-            // rechtsX=32767 (Roll=1), rechtsY=-32767 (Pitch=-1)
-            var cmd = ControllerMapping.ToManualControlCommand(-32767, -32768, 32767, -32767, true);
-            Assert.Equal(0f, cmd.Throttle);
+            // Der linke Stick Y existiert im Kommando-Aufruf nicht mehr (D3v2):
+            // Signatur ist (leftX, rightX, rightY, trigger); Throttle kommt nur aus R2.
+            var cmd = ControllerMapping.ToManualControlCommand(0, 0, 0, 128, true);
+            Assert.InRange(cmd.Throttle, 0.47f, 0.49f); // (128-10)/245 ≈ 0.482
+        }
+
+        [Fact]
+        public void D3v2_Volle_Kombination_Jede_Eingabe_Ihr_Eigenes_Feld()
+        {
+            // Alle Eingaben gleichzeitig, alle verschieden:
+            // linksX=-32767 (Yaw=-1), rechtsX=32767 (Roll=1),
+            // rechtsY=-32767 (Pitch=-1), R2=255 (Throttle=1)
+            var cmd = ControllerMapping.ToManualControlCommand(-32767, 32767, -32767, 255, true);
+            Assert.Equal(1f, cmd.Throttle);
             Assert.Equal(1f, cmd.Roll);
             Assert.Equal(-1f, cmd.Pitch);
             Assert.Equal(-1f, cmd.Yaw);
         }
 
         [Fact]
-        public void Achsen_Sind_Unabhaengig_Linker_Stick_Veraendert_RollPitch_Nicht()
+        public void Trigger_Veraendert_Nur_Throttle_Thrust_Nicht_Die_Achsen()
         {
-            var ohneAusschlag = ControllerMapping.ToManualControlCommand(0, 0, 12345, -5432, true);
-            var mitAusschlag = ControllerMapping.ToManualControlCommand(-32767, 32767, 12345, -5432, true);
-            Assert.Equal(ohneAusschlag.Roll, mitAusschlag.Roll);
-            Assert.Equal(ohneAusschlag.Pitch, mitAusschlag.Pitch);
+            var wenig = ControllerMapping.ToManualControlCommand(12345, -5432, 6789, 20, true);
+            var viel = ControllerMapping.ToManualControlCommand(12345, -5432, 6789, 250, true);
+            Assert.Equal(wenig.Roll, viel.Roll);
+            Assert.Equal(wenig.Pitch, viel.Pitch);
+            Assert.Equal(wenig.Yaw, viel.Yaw);
+            Assert.True(viel.Throttle > wenig.Throttle);
         }
 
         // ---------- Command-Erzeugung: Fixfelder ----------
@@ -207,7 +240,7 @@ namespace QuadroControl.Core.Tests
         [Fact]
         public void Erzeugtes_Kommando_Collective_0_und_FlightModeSwitchPosition_0()
         {
-            var cmd = ControllerMapping.ToManualControlCommand(1000, 2000, 3000, 4000, true);
+            var cmd = ControllerMapping.ToManualControlCommand(1000, 2000, 3000, 40, true);
             Assert.Equal(0f, cmd.Collective);
             Assert.Equal(0, cmd.FlightModeSwitchPosition);
         }
@@ -216,13 +249,13 @@ namespace QuadroControl.Core.Tests
         public void Erzeugtes_Kommando_Serialisiert_Mit_Thrust_Throttle_Spiegel()
         {
             // Integration: Mapping -> Payload; Thrust-Fenster == Throttle-Fenster
-            var cmd = ControllerMapping.ToManualControlCommand(0, 16384, 0, 0, true);
+            var cmd = ControllerMapping.ToManualControlCommand(0, 0, 0, 191, true);
             byte[] payload = cmd.ToPayload();
             string throttle = BitConverter.ToString(payload, 0, 4);
             string thrust = BitConverter.ToString(payload, 20, 4);
             Assert.Equal(thrust, throttle);
-            // Throttle(16384) = 49152/65535 ~ 0.7500114 — im Rahmen 0.74..0.76
-            Assert.InRange(cmd.Throttle, 0.74f, 0.76f);
+            // Throttle(191) = (191-10)/245 = 181/245 ~ 0.7388 — im Rahmen 0.73..0.76
+            Assert.InRange(cmd.Throttle, 0.73f, 0.76f);
         }
     }
 }

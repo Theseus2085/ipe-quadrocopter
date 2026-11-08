@@ -3,30 +3,43 @@
 namespace QuadroControl.Core.Controller
 {
     /// <summary>
-    /// Belegung des Xbox-360-Controllers, Mode-2 (Entscheidung D3, dokumentiert
+    /// Belegung des Xbox-360-Controllers (Entscheidung D3v2, dokumentiert
     /// in BUILD-AUFTRAG/controllerbelegung):
-    ///   linker Stick Y  = Throttle (roh -32768…32767 → 0…1)
+    ///   R2 (rechter Trigger) = Throttle (roh 0…255 → 0…1)
     ///   linker Stick X  = Yaw      (skaliert auf -1…1)
     ///   rechter Stick X = Roll     (skaliert auf -1…1)
     ///   rechter Stick Y = Pitch    (skaliert auf -1…1)
-    ///   Taste A = Arming, Taste B = Disarming (nach UE4)
-    /// SharpDX.XInput liefert die Achsen als short (-32768…32767).
+    ///   Taste A = Arming, Taste B = Disarming (laut UE4 vorgeschrieben)
+    /// Der linke Stick Y ist nicht belegt (Rohwert wird nur angezeigt).
+    /// SharpDX.XInput: Achsen als short (-32768…32767), Trigger als byte (0…255).
     /// </summary>
     public static class ControllerMapping
     {
         /// <summary>Größter positiver Achsenwert von XInput (für die -1…1-Skalierung).</summary>
         public const short AxisMax = 32767;
 
-        /// <summary>Kleinster negativer Achsenwert von XInput (für die 0…1-Skalierung des Gas-Sticks).</summary>
-        public const short AxisMin = -32768;
+        /// <summary>Größter Triggerwert von XInput (voller Zug = 255).</summary>
+        public const byte TriggerMax = 255;
 
         /// <summary>
-        /// Linker Stick Y → Throttle 0…1 (Mode-2: Stick oben = mehr Gas).
-        /// Abbildung (-32768…32767) → (0…1), auf [0;1] begrenzt.
+        /// Totzone des rechten Triggers: Werte bis hierhin gelten als
+        /// "nicht betätigt" und ergeben 0 Gas (Ruhe-Rauschen des Triggers).
         /// </summary>
-        public static float ThrottleFromAxis(short leftStickY)
+        public const byte TriggerTotzone = 10;
+
+        /// <summary>
+        /// R2 (rechter Trigger) → Throttle 0…1 (mehr Zug = mehr Gas).
+        /// Abbildung (Totzone…255) → (0…1), auf [0;1] begrenzt; Werte
+        /// bis zur Totzone ergeben exakt 0.
+        /// </summary>
+        public static float ThrottleFromTrigger(byte rightTrigger)
         {
-            float value = (leftStickY - AxisMin) / (float)(AxisMax - AxisMin);
+            if (rightTrigger <= TriggerTotzone)
+            {
+                return 0f;
+            }
+
+            float value = (rightTrigger - TriggerTotzone) / (float)(TriggerMax - TriggerTotzone);
             return Clamp(value, 0f, 1f);
         }
 
@@ -58,21 +71,22 @@ namespace QuadroControl.Core.Controller
         }
 
         /// <summary>
-        /// Baut aus den vier Achsen einen vollständigen ManualControlCommand
+        /// Baut aus den Eingaben einen vollständigen ManualControlCommand
         /// (alle Felder belegt, Collective=0, Thrust=Throttle, Connected=1,
-        /// FlightModeSwitchPosition=0).
+        /// FlightModeSwitchPosition=0). Gas kommt vom rechten Trigger (R2),
+        /// der linke Stick Y geht nicht ein (nicht belegt, D3v2).
         /// </summary>
         public static ManualControlCommandData ToManualControlCommand(
-            short leftStickX, short leftStickY, short rightStickX, short rightStickY, bool controllerConnected)
+            short leftStickX, short rightStickX, short rightStickY, byte rightTrigger, bool controllerConnected)
         {
             return new ManualControlCommandData
             {
-                Throttle = ThrottleFromAxis(leftStickY),
+                Throttle = ThrottleFromTrigger(rightTrigger),
                 Roll = RollFromAxis(rightStickX),
                 Pitch = PitchFromAxis(rightStickY),
                 Yaw = YawFromAxis(leftStickX),
                 Collective = 0f,
-                Thrust = ThrottleFromAxis(leftStickY), // wird in ToPayload() erneut mit Throttle synchronisiert
+                Thrust = ThrottleFromTrigger(rightTrigger), // wird in ToPayload() erneut mit Throttle synchronisiert
                 Connected = controllerConnected ? (byte)1 : (byte)0,
                 FlightModeSwitchPosition = 0
             };

@@ -440,13 +440,13 @@ Handshake/Heartbeat, Arming) sind aus der GUI bedienbar (PROG-008A).
   <!-- Controller-Ausgabe -->
   <rect x="26" y="270" width="588" height="126" rx="4" fill="#f7f9fb" stroke="#c9d4e0"/>
   <text x="40" y="292" font-size="12" font-weight="bold" fill="#1d3a5f">Controller-Ausgabe (Xbox-Controller)</text>
-  <text x="40" y="310" font-size="10.5" fill="#5a6673">Mode-2: links Y = Gas, links X = Gieren, rechts X = Rollen, rechts Y = Nicken - Taste A = Arming, Taste B = Disarming</text>
+  <text x="40" y="310" font-size="10.5" fill="#5a6673">Belegung: R2 = Gas, links X = Gieren, rechts X = Rollen, rechts Y = Nicken - Taste A = Arming, Taste B = Disarming</text>
   <g font-size="11" fill="#24313f">
     <rect x="40"  y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="48" y="337">Links X (Yaw)</text>
-    <rect x="190" y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="198" y="337">Links Y (Gas)</text>
+    <rect x="190" y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="198" y="337">Links Y (frei)</text>
     <rect x="340" y="322" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="348" y="337">Rechts X (Roll)</text>
     <rect x="490" y="322" width="110" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="498" y="337">Rechts Y (Pitch)</text>
-    <rect x="40"  y="354" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="48" y="369">LeftTrigger</text>
+    <rect x="40"  y="354" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="48" y="369">R2 (Gas)</text>
     <rect x="190" y="354" width="130" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="198" y="369">Tasten</text>
     <rect x="340" y="354" width="260" height="22" fill="#ffffff" stroke="#c9d4e0"/><text x="348" y="369">Gas als DLL-Hex (nur Programm 2)</text>
   </g>
@@ -463,7 +463,7 @@ Handshake/Heartbeat, Arming) sind aus der GUI bedienbar (PROG-008A).
   <tr><td><span class="mono">BT_XBoxRead</span></td><td>Button</td><td>Controller lesen</td><td>startet/stoppt den Controller-Thread (Arming/Disarming über Tasten A/B)</td></tr>
   <tr><td><span class="mono">Label_VerbindungStatus</span></td><td>Label</td><td>Verbindungsstatus</td><td>Darstellung des Verbindungsstatus (getrennt/verbunden/Heartbeat/Fehler)</td></tr>
   <tr><td><span class="mono">Label_ArmingStatus</span> + LED</td><td>Label + Image</td><td>Armingstatus</td><td>Anzeige des Arming-Status (PROG-010A, siehe Abschnitt 11)</td></tr>
-  <tr><td><span class="mono">TB_AnalogLX/LY/RX/RY, TB_LeftTrigger, TB_ButtonA, TB_DLLHex</span></td><td>TextBoxen</td><td>Controller-Ausgabe</td><td>Live-Werte der Sticks/Trigger/Tasten; TB_DLLHex zeigt den Gaswert wie ihn die DLL-Funktion kodiert</td></tr>
+  <tr><td><span class="mono">TB_AnalogLX/LY/RX/RY, TB_RightTrigger, TB_ButtonA, TB_DLLHex</span></td><td>TextBoxen</td><td>Controller-Ausgabe</td><td>Live-Werte der Sticks/Trigger/Tasten; TB_RightTrigger zeigt R2 (Gas, 0-255); TB_DLLHex zeigt den Gaswert wie ihn die DLL-Funktion kodiert</td></tr>
 </table>
 
 <!-- ================= 9 THREADS ================= -->

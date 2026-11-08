@@ -82,11 +82,12 @@ namespace QuadroControl.Core.Tests
                 MessageFactory.BuildManualControlCommand(ManualControlCommandData.ForArming()));
             sm.Arm();
 
-            // Schritt 4b: Steuerkommandos (Muster Roll/Pitch/Yaw/Throttle)
+            // Schritt 4b: Steuerkommandos (Muster Roll/Pitch/Yaw/Throttle, D3v2:
+            // Gas aus R2, linksX=Yaw, rechtsX=Roll, rechtsY=Pitch)
             transport.SchickeHexString(MessageFactory.BuildManualControlCommand(
-                Controller.ControllerMapping.ToManualControlCommand(0, 16384, 32767, -32767, true)));
+                Controller.ControllerMapping.ToManualControlCommand(0, 32767, -32767, 133, true)));
             transport.SchickeHexString(MessageFactory.BuildManualControlCommand(
-                Controller.ControllerMapping.ToManualControlCommand(-32767, 32767, -32767, 32767, true)));
+                Controller.ControllerMapping.ToManualControlCommand(-32767, -32767, 32767, 255, true)));
             transport.SchickeHexString(MessageFactory.BuildManualControlCommand(
                 Controller.ControllerMapping.ToManualControlCommand(8192, 0, 0, 0, true)));
 
@@ -237,10 +238,10 @@ namespace QuadroControl.Core.Tests
         public void Steuerkommando_1_Muster_Roll_Pitch_Yaw_Throttle()
         {
             // rechtsX=32767 -> Roll=+1, rechtsY=-32767 -> Pitch=-1, linksX=0 -> Yaw~0,
-            // linksY=16384 -> Throttle ~0.75
+            // R2=133 -> Throttle = (133-10)/245 ~ 0.502 (halb Gas)
             byte[] n = Parse(MissionErzeugen().Nachrichten[65]);
             Assert.Equal("3C 20 38 00 80 74 10 C4 00 00", Erste10(n));
-            Assert.InRange(FloatAn(n, 0), 0.7499f, 0.7501f); // Throttle ~0.75
+            Assert.InRange(FloatAn(n, 0), 0.501f, 0.503f); // Throttle ~0.502
             Assert.Equal(1f, FloatAn(n, 4));                 // Roll = +1
             Assert.Equal(-1f, FloatAn(n, 8));                // Pitch = -1
             Assert.Equal(0f, FloatAn(n, 12));                // Yaw = 0 (linksX neutral)
@@ -250,7 +251,7 @@ namespace QuadroControl.Core.Tests
         [Fact]
         public void Steuerkommando_2_Gegenlaengiges_Steuerkommando()
         {
-            // linksX=-32767 -> Yaw=-1, linksY=32767 -> Throttle=1,
+            // linksX=-32767 -> Yaw=-1, R2=255 -> Throttle=1,
             // rechtsX=-32767 -> Roll=-1, rechtsY=32767 -> Pitch=+1
             byte[] n = Parse(MissionErzeugen().Nachrichten[66]);
             Assert.Equal(1f, FloatAn(n, 0));   // Throttle
@@ -265,8 +266,8 @@ namespace QuadroControl.Core.Tests
             byte[] n = Parse(MissionErzeugen().Nachrichten[67]);
             // linksX=8192 -> Yaw = 8192/32767 ~ 0.25001
             Assert.InRange(FloatAn(n, 12), 0.2499f, 0.2501f);
-            // linksY=0 -> Throttle = 32768/65535 ~ 0.5000076 (Mittelstellung ~ halbes Gas)
-            Assert.InRange(FloatAn(n, 0), 0.4999f, 0.5001f);
+            // R2=0 (losgelassen) -> Throttle = 0 (PROG-011: kein Gas ohne Eingabe)
+            Assert.Equal(0f, FloatAn(n, 0));
             Assert.Equal(0f, FloatAn(n, 4));
             Assert.Equal(0f, FloatAn(n, 8));
             // Thrust spiegelt Throttle auch im laufenden Steuerkommando

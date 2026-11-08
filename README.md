@@ -6,7 +6,7 @@ zwei WPF-Programme steuern den Flugcontroller (CC3D *Revolution*, LibrePilot)
 per **UAVTalk** über die vom Lehrstuhl gestellte Funktionsbibliothek — einmal
 gegen die **virtuelle Testumgebung** (Programm 1) und einmal gegen den **realen
 Quadrocopter** (Programm 2). Die Eingabe erfolgt über einen Xbox-360-Controller
-(SharpDX.XInput, Mode-2).
+(SharpDX.XInput; R2 = Gas, Entscheidung D3v2).
 
 > **Ehrlichkeitshinweis:** Logikkern und Kompilierung sind auf der Linux-Build-VM
 > verifiziert (`dotnet build`: komplette Solution 0 Fehler; `dotnet test`:
@@ -106,8 +106,8 @@ Erwartet: **385 passed / 0 failed** (bekannte Protokoll-Vektoren wie
       und startet den Heartbeat (1 Nachricht/s, eigener Thread).
    3. **Controller lesen** → startet die Controller-Abfrage (~20 ms Takt).
    4. Taste **A** = Arming (LED leuchtet grün + „Armed“), Taste **B** = Disarming.
-   5. Fliegen: linker Stick Y = Gas, linker Stick X = Gieren, rechter Stick
-      X = Rollen, rechter Stick Y = Nicken (Mode-2).
+   5. Fliegen: R2 (rechter Trigger) = Gas, linker Stick X = Gieren, rechter
+      Stick X = Rollen, rechter Stick Y = Nicken (D3v2; linker Stick Y frei).
 4. Beenden: erst Disarmen, dann **COMPort trennen** (die App sendet vorher
    automatisch einen neutralen Steuerbefehl, damit die Rotoren stillstehen).
 
@@ -122,7 +122,7 @@ Fehlersuche: [docs/windows-testplan.md](docs/windows-testplan.md).
 | `docs/programmablaufplan.md` | Programmablaufpläne (Verbindung, Arming, Controller-Schleife, Sicherheit) |
 | `docs/klassendiagramm.md` | Klassendiagramm (Core + Adapter der beiden Apps) |
 | `docs/sicherheitsfeatures.md` | Sicherheitsfeatures mit Anforderungs-IDs (PROG-009/009A/010A/011 …) |
-| `docs/controllerbelegung.md` | Controller-Belegung Mode-2 (Steuerungskonzept C5) |
+| `docs/controllerbelegung.md` | Controller-Belegung D3v2, R2 = Gas (Steuerungskonzept C5) |
 | `docs/windows-testplan.md` | Nummerierte Prüfliste für den Windows-PC (Build, virtueller Test, realer Test propellerlos) |
 
 ## Offene Punkte für den Windows-PC (Zusammenfassung)

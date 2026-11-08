@@ -63,8 +63,9 @@ betätigt sind“ — kein „letzter Wert klebt“.
 `ShallSendNeutralCommand = true`; der Controller-Thread sendet dann in jedem
 Zyklus `SafetyMonitor.NeutralCommand()` — ein `ManualControlCommand` mit
 Throttle/Roll/Pitch/Yaw/Collective/Thrust = 0, `Channel[10]` = 0,
-`Connected = 0`, `FlightModeSwitchPosition` = 0. Totzone: Stick-Auslenkungen
-unter ±2500 Rohwerte gelten bereits als „keine Eingabe“.
+`Connected = 0`, `FlightModeSwitchPosition` = 0. Totzonen: Stick-Auslenkungen
+unter ±2500 Rohwerte gelten bereits als „keine Eingabe“; der rechte Trigger
+(R2, Gas) liefert unterhalb von 11 Rohwerten exakt 0 Gas.
 
 **Verhalten:** Lässt der Bediener die Sticks los, kehrt der QC in Neutralstellung
 zurück; nach dem Loslassen bleibt kein Gaswert stehen. Getestet in

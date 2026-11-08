@@ -144,3 +144,30 @@ Alle Phasen P0-P7 des BUILD-AUFTRAG.md abgeschlossen: komplette Solution mit Cor
   bleibt als Version ohne Simulator liegen.)
 - OFFEN bleibt unverändert: Real-App mit echtem FC an Simons PC (propellerlos, F1;
   docs/windows-testplan.md Abschnitt D) + C9 (Controller-Ausschalt-Test am echten Gamepad).
+
+## Controller-Remapping D3v2: R2 = Gas statt linker Stick Y (08.11.2026, Tag-Session)
+
+- SIMONS ENTSCHEIDUNG: neue Belegung R2 (rechter Trigger) = Throttle/Thrust,
+  linker Stick X = Yaw, rechter Stick X/Y = Roll/Pitch, linker Stick Y frei.
+  Kurskonform (keine Achszuordnung vorgeschrieben, nur Geraet/E2/A+B/C5);
+  Begruendung + Voltextext in docs/controllerbelegung.md, ABWEICHUNGEN.md #19.
+- CODE: ControllerMapping.cs (ThrottleFromTrigger mit Totzone 10, stetige
+  Skalierung (t-10)/245; AxisMin/ThrottleFromAxis entfernt), beide
+  MainWindow.xaml.cs (Aufrufstelle, R2-Anzeige, dllHex im Real-Programm aus R2,
+  TB_LeftTrigger->TB_RightTrigger), beide MainWindow.xaml (Hinweistext,
+  Feldbeschriftungen). Arming/Disarming (A/B) unveraendert — Triggerstellung
+  ist dafuer irrelevant, die Sequenz sendet eigene MCC(-1).
+- TESTS: T8 + ControllerMappingTests fuer Trigger-Grenzwerte neu geschrieben,
+  T10-Goldstream auf neue Signatur/Throttle-Werte portiert (Nachricht 67
+  assertet jetzt R2=0 -> Throttle=0 als PROG-011-Nachweis). 385 -> 394 Tests,
+  alle gruen; Solution-Build 0 Fehler.
+- DOKU-SWEEP: controllerbelegung.md (vollstaendig), README (3 Stellen),
+  sicherheitsfeatures.md (Totzonen), klassendiagramm.md, TEST-AUFTRAG.md,
+  BUILD-AUFTRAG.md, projekt-plan.md, wissen-programmierung.md §10,
+  DOKUMENTATION/erklaerung.html (Hinweiszeile, GUI-Skizze, Elementtabelle).
+  Kein "Mode-2"-Text mehr in aktiven Dokumenten (nur noch historische Verweise).
+- OFFEN daraus: (a) Live-Nachtest beider Apps auf der Windows-VM mit
+  Fake-XInput (R2-Werte in ctrl.txt feeden, Throttle in GUI + MCC pruefen),
+  (b) Release-ZIP neu bauen + auf NC legen (QuadroControl-Release-2026-11-08.zip
+  enthaelt noch die Mode-2-Builds von heute frueh), (c) Beleg-Kapitel C5 beim
+  naechsten Doku-Lauf auf D3v2 stellen.

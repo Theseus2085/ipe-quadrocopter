@@ -120,7 +120,7 @@
         <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,18">
             <TextBlock Text="QuadroControl Virtuell — Programm 1: virtuelle Testumgebung (vKTCQuadroControl)"
                        FontSize="15" FontWeight="SemiBold" Foreground="#20364D"/>
-            <TextBlock Text="UAVTalk-Kommunikation über die Kurs-Bibliothek: COM-Port, Handshake + Heartbeat, Steuerung per Xbox-Controller (Mode-2)."
+            <TextBlock Text="UAVTalk-Kommunikation über die Kurs-Bibliothek: COM-Port, Handshake + Heartbeat, Steuerung per Xbox-Controller (R2 = Gas)."
                        FontSize="12" Foreground="#606060" TextWrapping="Wrap" Margin="0,3,0,0"/>
         </StackPanel>
 
@@ -167,19 +167,19 @@
         <GroupBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
                   Header="Controller-Ausgabe (Xbox-Controller)" Margin="0,18,0,0" Padding="10,8,10,4">
             <StackPanel>
-                <TextBlock Text="Mode-2: linker Stick Y = Gas (Throttle), linker Stick X = Gieren (Yaw), rechter Stick X = Rollen (Roll), rechter Stick Y = Nicken (Pitch) — Taste A = Arming, Taste B = Disarming"
+                <TextBlock Text="Belegung: R2 (rechter Trigger) = Gas (Throttle), linker Stick X = Gieren (Yaw), rechter Stick X = Rollen (Roll), rechter Stick Y = Nicken (Pitch). Taste A = Arming, Taste B = Disarming; linker Stick Y ist frei."
                            FontSize="12" Foreground="#606060" TextWrapping="Wrap" Margin="0,0,0,8"/>
                 <UniformGrid Columns="4">
                     <TextBlock Text="Links X (Yaw):" Style="{StaticResource ControllerFeldName}"/>
                     <TextBox x:Name="TB_AnalogLX" Style="{StaticResource ControllerFeld}" Text="0"/>
-                    <TextBlock Text="Links Y (Gas):" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBlock Text="Links Y (frei):" Style="{StaticResource ControllerFeldName}"/>
                     <TextBox x:Name="TB_AnalogLY" Style="{StaticResource ControllerFeld}" Text="0"/>
                     <TextBlock Text="Rechts X (Roll):" Style="{StaticResource ControllerFeldName}"/>
                     <TextBox x:Name="TB_AnalogRX" Style="{StaticResource ControllerFeld}" Text="0"/>
                     <TextBlock Text="Rechts Y (Pitch):" Style="{StaticResource ControllerFeldName}"/>
                     <TextBox x:Name="TB_AnalogRY" Style="{StaticResource ControllerFeld}" Text="0"/>
-                    <TextBlock Text="LeftTrigger:" Style="{StaticResource ControllerFeldName}"/>
-                    <TextBox x:Name="TB_LeftTrigger" Style="{StaticResource ControllerFeld}" Text="0"/>
+                    <TextBlock Text="R2 (Gas):" Style="{StaticResource ControllerFeldName}"/>
+                    <TextBox x:Name="TB_RightTrigger" Style="{StaticResource ControllerFeld}" Text="0"/>
                     <TextBlock Text="Tasten:" Style="{StaticResource ControllerFeldName}"/>
                     <TextBox x:Name="TB_ButtonA" Style="{StaticResource ControllerFeld}" Text="-"/>
                 </UniformGrid>
