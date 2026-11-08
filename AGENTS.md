@@ -31,8 +31,11 @@ This file overrides the parent `workspace/AGENTS.md` for everything under `ipe-q
    `harte-kriterien.md` + `wissen-programmierung.md` (keep the "Stand" date accurate).
 5. OPAL interactions stay READ-ONLY (opal-access skill hard rules apply).
 6. Language: course material and deliverable drafts are German; keep knowledge/rules files German.
-7. All software Simon will run on his Windows PC (Visual Studio 2015/2017/2019). This machine only
-   produces docs/plans/analysis — do not assume .NET tooling here.
+7. All software Simon will run on his Windows PC (Visual Studio 2015/2017/2019). This machine CAN
+   build and test the whole solution (`~/dotnet-ms/dotnet`, SDK-style + EnableWindowsTargeting,
+   verified since 29.10.: 0 errors, 385/385 tests) and even hosted the Windows runtime tests via
+   Azure VM (03.11.) — but no local Windows GUI runtime; the `release/` folder (gitignored,
+   course binaries) carries ready-to-run exes for Simon's PC.
 
 ## Standing rules (inherited from workspace index)
 

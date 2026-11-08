@@ -45,10 +45,11 @@ flowchart TD
     Q -- "nein" --> X["Ignoriert — Zustandsmaschine<br/>lässt kein vorzeitiges Arming zu"] --> E(["Ende"])
     Q -- "ja" --> L1["ManualControlCommand senden:<br/>Throttle = −1 UND Thrust = −1<br/>(Rest neutrale Werte)"]
     L1 --> W["50 ms warten"]
-    W --> C2{"5 Wiederholungen<br/>gesendet?"}
+    W --> C2{"55 Wiederholungen<br/>gesendet? (DLL-Kontrakt:<br/>50er-Throttle-Puffer, Summe −50)"}
     C2 -- "nein" --> L1
     C2 -- "ja" --> A1["AccessoryDesired senden:<br/>AccessoryVal = +1"]
-    A1 --> ST["Zustandsmaschine: HeartbeatActive → Armed"]
+    A1 --> F1["Abschließender ManualControlCommand<br/>mit Throttle = −1 (löst<br/>Vorgemerkt → Arming_Aktiv aus)"]
+    F1 --> ST["Zustandsmaschine: HeartbeatActive → Armed"]
     ST --> GUI["GUI: LED leuchtet grün, Text „Armed“<br/>(PROG-010A)"]
     GUI --> E2(["Ende — QC ist bewaffnet"])
 ```

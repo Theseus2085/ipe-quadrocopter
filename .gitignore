@@ -13,3 +13,4 @@ nightly/
 libs/
 HANDOFF-NIGHT-*.md
 HANDOFF-AZURE-VM.md
+release/

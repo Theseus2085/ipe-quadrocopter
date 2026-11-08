@@ -1,9 +1,17 @@
 # Windows-Testplan (Checkliste für Simons PC)
 
-> Der Logikkern und die 79 Unit-Tests wurden auf der Build-VM (Linux) geprüft.
-> **Die WPF-Anwendungen und das Verhalten der Kurs-DLLs können nur unter
-> Windows geprüft werden** — dieser Plan listet jeden Schritt mit erwartetem
-> Ergebnis. Reihenfolge einhalten: erst virtuell, dann real, **propellerlos**
+> **Stand 08.11.2026:** Abschnitt C (virtueller Test) wurde am 03.11.2026
+> **live unter Windows Server 2022** durchlaufen und bestätigt (C1–C8, C10,
+> C11; mit virtuellem Stick statt echtem Gamepad — Controller-Hardware also
+> weiterhin erst am eigenen PC gefahren. Details: NACHTBERICHT.md). Verbleibend
+> für Simons PC: C9
+> (Controller-Ausschalt-Test am echten Gamepad) und Abschnitt D (realer FC).
+> Zum Starten der fertigen Programme ist Abschnitt A **nicht** nötig — das
+> `release/`-Paket (Nextcloud `/IPE-Quadrocopter/`) enthält gebaute Exes +
+> Simulator + Anleitung; A gilt nur fürs Bauen aus dem Quellcode.
+>
+> Der Logikkern und die 385 Unit-Tests wurden auf der Build-VM (Linux) geprüft.
+> Reihenfolge einhalten: erst virtuell, dann real, **propellerlos**
 > zuerst (Sicherheitshinweis F1: „die Motoren können sich ungeplant in Betrieb
 > setzen“).
 
@@ -20,7 +28,7 @@
 
 | Nr. | Schritt | Erwartetes Ergebnis |
 |---|---|---|
-| B1 | In *Ansicht → Test-Explorer* alle Tests ausführen (oder `dotnet test tests/QuadroControl.Core.Tests/QuadroControl.Core.Tests.csproj`) | **79 passed / 0 failed** — deckt Protokoll-Vektoren, Handshake-Sequenz, Feldreihenfolge, Zustandsmaschine, Sicherheitslogik ab |
+| B1 | In *Ansicht → Test-Explorer* alle Tests ausführen (oder `dotnet test tests/QuadroControl.Core.Tests/QuadroControl.Core.Tests.csproj`) | **385 passed / 0 failed** — deckt Protokoll-Vektoren, Handshake-Sequenz, Feldreihenfolge, Zustandsmaschine, Sicherheitslogik ab |
 
 ## C. Virtueller Test (Programm 1 + Quadrocopter.exe, E7)
 
@@ -66,10 +74,15 @@ PROG-004A; OPLink-KopplungChannels 77–119, 57600 Bd, Max Power 6,3 — PROG-00
 
 ## Bekannte Grenzen dieser Checkliste
 
-- Die GUI wurde auf der Linux-Build-VM **nur als XML** geprüft (wohlgeformt,
-  Vertragsnamen, Handler). Das visuelle Layout (Abstände, Umbrüche,
-  LED-Anzeige) zeigt sich erst unter Windows — Punkt C1 prüft das bewusst als
-  Erstes.
-- Das Senden selbst (CRC-8-Anhang der DLL, Timing der Testumgebung) ist auf
-  der VM nicht ausführbar; die erzeugten Bytefolgen sind dagegen
-  bitgenau getestet.
+- ~~Die GUI wurde auf der Linux-Build-VM nur als XML geprüft~~ — das visuelle
+  Layout (Öffnen der Fenster, LED-Anzeige, Buttons) wurde am 03.11.2026 live
+  unter Windows bestätigt; C1 bleibt als bewusster Erst-Check drin.
+- ~~Das Senden selbst ist auf der VM nicht ausführbar~~ — das Laufzeitverhalten
+  der Kurs-DLL (TCP-Brücke zum Simulator, Arming-Kontrakt 50× MCC(−1) +
+  AccessoryDesired + finaler MCC) wurde am 03.11.2026 live verifiziert
+  (Flüge in Szenen I–III); die erzeugten Bytefolgen sind zusätzlich bitgenau
+  getestet (385 Unit-Tests).
+- Bekannte Besonderheit im Betrieb: Fällt der DLL-Heartbeat-Timer (2000 ms)
+  einmal aus (z. B. Lastspitzen beim Szenenwechsel), erholt er sich nicht von
+  selbst — Abhilfe: COMPort trennen → verbinden → FC initialisieren
+  (ABWEICHUNGEN 18, live verifiziert).

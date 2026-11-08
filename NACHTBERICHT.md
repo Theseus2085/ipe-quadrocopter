@@ -116,3 +116,31 @@ Alle Phasen P0-P7 des BUILD-AUFTRAG.md abgeschlossen: komplette Solution mit Cor
   AccDes + finaler MCC), Heartbeat-Timer-Degeneration dokumentiert (18).
 - 385/385 Unit-Tests gruen nach Anpassung (T9/T10 auf neue Sequenz).
 - OFFEN bleibt: Real-App mit echtem FC an Simons PC (propellerlos, F1).
+
+## Doku-Standsgleichung + release/-Sofortstartpaket (08.11.2026)
+
+- Anlass: Simons Auftrag, jede Doku auf den aktuellen Build-Stand zu bringen und ein
+  maximal startfertiges Paket (wenigste Schritte, wenigste Installation) bereitzustellen.
+- VERIFIZIERUNG VORHER (eigene Laeufe): `~/dotnet-ms/dotnet build -c Release` -> 0 Fehler,
+  beide WPF-.exe frisch erzeugt; `dotnet test` -> **385 passed / 0 failed**.
+- DOKU AKTUALISIERT (Arming-v2-Sequenz 55x MCC(-1) + AccDes + finaler MCC nachgezogen,
+  Testzaehler 79 -> 385, Live-Test-Vermerke 03.11., Simulator-Startreihenfolge
+  Steuerprogramm zuerst, release/-Hinweise):
+  README.md, docs/windows-testplan.md, docs/controllerbelegung.md,
+  docs/sicherheitsfeatures.md, docs/programmablaufplan.md, docs/klassendiagramm.md,
+  DOKUMENTATION/erklaerung.html (Abschnitt 7 Arming-Tabelle, Teststand-Hinweis,
+  Abweichungstabelle +17/+18), projekt-plan.md, AGENTS.md (Regel 7: .NET-Tooling).
+- RELEASE-PAKET `release/` (lokal im Projektordner, per .gitignore aus dem Repo gehalten,
+  Kurs-Binaerdateien): QuadroControl-Virtuell/ + QuadroControl-Real/ (frische
+  Release-Builds + alle 4 PNGs inkl. kyrillischem Logo-Namen, ORIGINAL scharfe
+  SharpDX.XInput.dll = echter Controller statt Fake-DLL), Simulator/ (Quadrocopter.exe
+  aus dem OPAL-NC-Spiegel entpackt + offizielle Anleitung-PDF),
+  ANLEITUNG-INSTALLATION.html (5-Schritte-Schnellstart, SmartScreen/Zulassen-Hinweis,
+  Steuerung, Troubleshooting inkl. Heartbeat-Re-Handshake, Real-App-Sicherheit),
+  README-START.txt (Kurzpointer). Null Installation noetig: .NET 4.x ist ab Windows 8
+  vorinstalliert; Controller (XInput) nur fuer Fliegen/Arming noetig.
+- AUSLIEFERUNG: ZIP auf Nextcloud /IPE-Quadrocopter/QuadroControl-Release-2026-11-08.zip,
+  Byte-verifiziert per GET + sha256. (Das aeltere QuadroControl-Paket.zip vom 03.11.
+  bleibt als Version ohne Simulator liegen.)
+- OFFEN bleibt unverändert: Real-App mit echtem FC an Simons PC (propellerlos, F1;
+  docs/windows-testplan.md Abschnitt D) + C9 (Controller-Ausschalt-Test am echten Gamepad).

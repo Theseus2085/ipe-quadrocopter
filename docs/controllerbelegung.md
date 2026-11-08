@@ -36,10 +36,13 @@ Der aktuelle Rohwert jeder Achse wird im laufenden Betrieb in den vier
 ## Arming / Disarming über die Tasten
 
 - **Taste A (Arming)** — nur im Zustand `HeartbeatActive`, also nach
-  abgeschlossenem Handshake: es werden **5×** ein `ManualControlCommand` mit
+  abgeschlossenem Handshake: es werden **55×** ein `ManualControlCommand` mit
   `Throttle = −1` **und** `Thrust = −1` gesendet (Abstand 50 ms), danach ein
-  `AccessoryDesired` mit `AccessoryVal = +1` (E5). Danach Zustand `Armed`,
-  LED leuchtet grün (PROG-010A).
+  `AccessoryDesired` mit `AccessoryVal = +1` und **ein abschließender weiterer
+  `ManualControlCommand` mit `Throttle = −1`** (E5; DLL-Kontrakt 03.11.2026
+  dekompiliert + live bestätigt, ABWEICHUNGEN.md #17 — die DLL puffert die
+  letzten 50 Throttle-Werte und aktiviert Arming nur bei Summe −50).
+  Danach Zustand `Armed`, LED leuchtet grün (PROG-010A).
 - **Taste B (Disarming)** — nur im Zustand `Armed`: ein `AccessoryDesired`
   mit `AccessoryVal = −1`. Zustand zurück auf `HeartbeatActive`.
 

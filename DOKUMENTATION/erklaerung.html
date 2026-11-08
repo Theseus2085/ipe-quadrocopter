@@ -374,14 +374,19 @@ ausgelöst (UE4):
 <table>
   <tr><th>Schritt</th><th>Nachricht</th><th>Bemerkung</th></tr>
   <tr>
-    <td>1. „Entsperren“ vorbereiten (5×)</td>
+    <td>1. „Entsperren“ vorbereiten (55×)</td>
     <td><span class="mono">ManualControlCommand</span> mit <b>Throttle = −1</b> und <b>Thrust = −1</b>, Rest neutrale Werte</td>
-    <td>mehrfach hintereinander schreiben (im Code: 5× im Abstand von 50 ms) - nur diese Kombination erlaubt das Arming</td>
+    <td>mehrfach hintereinander schreiben (im Code: 55× im Abstand von 50 ms; DLL-Kontrakt #17: die DLL puffert die letzten 50 Throttle-Werte, Arming nur bei Summe −50 — dekompiliert + live bestätigt 03.11.2026)</td>
   </tr>
   <tr>
     <td>2. Arming</td>
     <td><span class="mono">AccessoryDesired</span> mit <b>AccessoryVal = +1</b></td>
-    <td>Konfiguration im FC: „Arm airframe using throttle off and: Accessory 0“, Arming timeout = 0 s</td>
+    <td>setzt nur „Vorgemerkt“; Konfiguration im FC: „Arm airframe using throttle off and: Accessory 0“, Arming timeout = 0 s</td>
+  </tr>
+  <tr>
+    <td>3. Abschluss</td>
+    <td>ein weiterer <span class="mono">ManualControlCommand</span> mit <b>Throttle = −1</b></td>
+    <td>erst der NÄCHSTE MCC entscheidet: Throttle-Summe −50 → Armed, sonst Abbruch</td>
   </tr>
   <tr>
     <td>Disarming</td>
@@ -627,15 +632,19 @@ dem realen FC bleibt dennoch unerlässlich). Der Demonstrator
   <li>Dasselbe Programm (Programm 2) anschließend propellerlos am realen FC wiederholen.</li>
 </ol>
 <div class="hinweis">
-<b>Grenzen der Linux-Build-VM (ehrliche Selbsteinschätzung):</b> Der Logikkern
+<b>Teststand (ehrliche Selbsteinschätzung, Stand 08.11.2026):</b> Der Logikkern
 (385 Unit-Tests) <b>und die Kompilierung beider WPF-Anwendungen</b> (komplette
 Solution, 0 Fehler, inkl. XAML-Markup-Kompilierung; beide .exe entstehen) sind
-auf der Build-VM verifiziert (seit 29.10., SDK-style-csproj mit
-<span class="mono">EnableWindowsTargeting</span>). Das <b>Laufzeitverhalten</b>
-(GUI starten, Kurs-DLLs live, virtuelle Testumgebung, Quadrocopter.exe, echter
-FC) ist dagegen <b>nur auf einem Windows-PC mit Visual Studio 2019</b> prüfbar.
-Alle dort nötigen Schritte stehen als nummerierte Checkliste in
-<span class="mono">docs/windows-testplan.md</span>.
+auf der Build-VM verifiziert. Die komplette <b>Laufzeitkette der virtuellen
+Testumgebung</b> wurde am <b>03.11.2026 live unter Windows Server 2022</b>
+getestet: GUI starten, Kurs-DLLs live, Quadrocopter.exe-Szenen I–III, Verbinden →
+Handshake → Heartbeat → Controller → Arming → Flug → Disarming sowie
+Wiederverbinden + Re-Handshake nach Heartbeat-Timeout. Offen bleibt der
+<b>reale Flugcontroller</b> (nur an einem Windows-PC mit angeschlossenem FC,
+propellerlos): nummerierte Checkliste in
+<span class="mono">docs/windows-testplan.md</span>, Abschnitt D. Fertig gepackte
+Programme ohne Visual Studio: Ordner <span class="mono">release/</span>
+(Kurs-Binärdateien, nicht im Repo).
 </div>
 <div class="gefahr">
 <b>Sicherheit vor dem Real-Test:</b> Propeller abmontiert (F1) bis auf den
@@ -667,6 +676,8 @@ Festforderung des Lastenhefts oder harte Kriterien (PROG-001 bis PROG-011A, E1-E
 <tr><td>14</td><td>Scope</td><td>Trigger (0-255) haben keine Core-Abbildung: reine GUI-Anzeige, keine Steuerfunktion laut Controllerbelegung</td></tr>
 <tr><td>15</td><td>Prüfkriterium</td><td>Mittelstellung Throttle = 32768/65535 exakt (Dokumentformel), nicht exakt 0.5; Roll/Pitch/Yaw-Mitte = exakt 0.0</td></tr>
 <tr><td>16</td><td>Wissen</td><td>Regel „ObjectIDMeta = ObjectID + 1" aus VL5 gilt nicht für Multi-Instance-Objekte (siehe Abschnitt 14); Code nutzt die wortwörtlichen Handshake-Strings</td></tr>
+<tr><td>17</td><td>Protokoll</td><td>Arming-Sequenz nach DLL-Dekompilierung + Live-Test (03.11.2026) korrigiert: 55× ManualControlCommand(−1), dann AccessoryDesired(+1), dann finaler ManualControlCommand(−1) — die DLL puffert die letzten 50 Throttle-Werte und aktiviert Arming nur bei Summe −50 (ArmingRepeatCount 5 → 55; Tests T9/T10 angepasst)</td></tr>
+<tr><td>18</td><td>Betrieb</td><td>Heartbeat-Timer der Kurs-DLL (2000 ms) erholt sich nach einmaligem Ablauf (z. B. Lastspitze beim Szenenwechsel) nicht von selbst — Abhilfe live verifiziert: COMPort trennen → verbinden → FC initialisieren</td></tr>
 </table>
 
 <h2 id="kursfehler">14. Fehlerhafte Angaben und Inkonsistenzen in den Kursunterlagen</h2>

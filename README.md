@@ -8,13 +8,17 @@ gegen die **virtuelle Testumgebung** (Programm 1) und einmal gegen den **realen
 Quadrocopter** (Programm 2). Die Eingabe erfolgt über einen Xbox-360-Controller
 (SharpDX.XInput, Mode-2).
 
-> **Ehrlichkeitshinweis:** Logikkern, Unit-Tests **und die Kompilierung beider
-> WPF-Anwendungen** (inkl. XAML) wurden auf einer Linux-VM verifiziert
-> (`dotnet build`: komplette Solution 0 Fehler; `dotnet test`: **79/79 grün**;
-> SDK-style-csproj mit `EnableWindowsTargeting`). **Starten und Fliegen** der
-> Apps (GUI, Testumgebung, Quadrocopter.exe, echter FC) geht nur unter Windows.
-> Was dazu auf einem Windows-PC zu prüfen ist, steht als nummerierte Checkliste in
-> **[docs/windows-testplan.md](docs/windows-testplan.md)**.
+> **Ehrlichkeitshinweis:** Logikkern und Kompilierung sind auf der Linux-Build-VM
+> verifiziert (`dotnet build`: komplette Solution 0 Fehler; `dotnet test`:
+> **385/385 grün**). Die komplette virtuelle Kette (GUI starten, Kurs-DLLs live,
+> Quadrocopter.exe, Szenen I–III, Arming → Flug → Disarming, Wiederverbinden)
+> wurde am **03.11.2026 live unter Windows Server 2022** getestet. Offen bleibt
+> der **reale Flugcontroller** (nur an einem Windows-PC mit angeschlossenem FC
+> möglich): nummerierte Checkliste in
+> **[docs/windows-testplan.md](docs/windows-testplan.md)**, Abschnitt D.
+> Fertig gepackte, sofort lauffähige Programme **ohne** Visual Studio: Ordner
+> `release/` (Kurs-Binärdateien, deshalb nicht im Repo — Nextcloud
+> `/IPE-Quadrocopter/`).
 
 ## Projektaufbau
 
@@ -26,7 +30,7 @@ IPE-Quadrocopter.sln
 │   ├── QuadroControl.Virtuell/      Programm 1: virtuelle Testumgebung (vKTCQuadroControl.dll)
 │   └── QuadroControl.Real/          Programm 2: realer Quadrocopter (KTCQuadroControl.dll)
 ├── tests/
-│   └── QuadroControl.Core.Tests/    79 xunit-Tests (Protokoll-Vektoren, Sequenzen, Sicherheit)
+│   └── QuadroControl.Core.Tests/    385 xunit-Tests (Protokoll-Vektoren, Sequenzen, Sicherheit)
 ├── docs/                            Dokumentation (Ablaufpläne, Klassen, Sicherheit, Controller, Windows-Test)
 ├── DOKUMENTATION/
 │   └── erklaerung.html              selbsterklärende Programmdokumentation (eine Datei, offline öffnen)
@@ -49,6 +53,10 @@ kleinen Transport-Adapter (`VirtuellQuadroTransport` / `RealQuadroTransport`)
 und enthalten die Threads (Controller ~20 ms, Heartbeat 1 s) sowie die GUI.
 
 ## Voraussetzungen (Windows-PC)
+
+> Zum **Starten der fertigen Programme** ist nichts davon nötig — das
+> `release/`-Paket läuft direkt (Details in `release/ANLEITUNG-INSTALLATION.html`).
+> Die folgende Liste gilt fürs **Bauen aus dem Quellcode**.
 
 1. **Visual Studio 2019** mit Workload *.NET-Desktopentwicklung*
    (VS 2017 geht auch; die Projekte sind old-style `.csproj` für .NET 4.5.2).
@@ -81,16 +89,17 @@ und enthalten die Threads (Controller ~20 ms, Heartbeat 1 s) sowie die GUI.
 dotnet test tests/QuadroControl.Core.Tests/QuadroControl.Core.Tests.csproj
 ```
 
-Erwartet: **79 passed / 0 failed** (bekannte Protokoll-Vektoren wie
+Erwartet: **385 passed / 0 failed** (bekannte Protokoll-Vektoren wie
 `1.0f → 00 00 80 3F`, Feldreihenfolge ManualControlCommand, exakte
 5-Nachrichten-Handshake-Sequenz, Zustandsmaschinen-Übergänge, Sicherheitslogik).
 
 ## Testablauf mit der virtuellen Umgebung (+ Quadrocopter.exe)
 
-1. **Quadrocopter.exe** (Unity-Demonstrator aus dem OPAL-Kurs,
+1. Eigenes Programm `QuadroControl.Virtuell` starten (E7: „Testumgebung zuerst“;
+   so auch am 03.11.2026 live getestet).
+2. **Quadrocopter.exe** (Unity-Demonstrator aus dem OPAL-Kurs,
    `Quadrocopter_EXE.zip`) starten — Netzwerkzugriff **nicht** erlauben
    (Abbrechen) — und eine Szene wählen (I Ebene, II Sporthalle, III Wiese).
-2. Eigenes Programm `QuadroControl.Virtuell` starten.
 3. In der GUI (Aufbau wie UE4-Folie 3 „Zielprogramm für Übung 4“):
    1. COM-Port eintragen (z. B. `COM3`) → **COMPort verbinden**.
    2. **FC initialisieren und Heartbeat** → sendet die 5 Handshake-Nachrichten
@@ -118,9 +127,14 @@ Fehlersuche: [docs/windows-testplan.md](docs/windows-testplan.md).
 
 ## Offene Punkte für den Windows-PC (Zusammenfassung)
 
-- WPF-Build beider Apps in VS2019 (unter Linux nicht kompilierbar — daher
-  hier nicht ausgeführt worden).
-- Verhalten der Kurs-DLLs (`SchickeHexString`, CRC-8-Anhang) und der
-  Testumgebung kann nur dort verifiziert werden.
+- ~~WPF-Build beider Apps~~ und ~~Verhalten der Kurs-DLLs / Testumgebung~~ —
+  **erledigt 03.11.2026** per Live-Test auf Windows Server 2022: Handshake,
+  Heartbeat, Szenen I–III mit Arming/Flug/Disarming, Wiederverbinden +
+  Re-Handshake (DLL-Kontrakt zusätzlich per Dekompilierung verifiziert,
+  ABWEICHUNGEN 17+18).
 - Realer FC: nur nach Kurs-Konfiguration (LibrePilot, Throttle Curve max. 0,3
-  bei 100 % Input — PROG-004A) und **propellerlos** (F1) testen.
+  bei 100 % Input — PROG-004A) und **propellerlos** (F1) testen —
+  [docs/windows-testplan.md](docs/windows-testplan.md) Abschnitt D.
+- Fertiges Startpaket (beide Programme + Simulator + Anleitung, ohne jede
+  Installation): Ordner `release/` lokal bzw. Nextcloud `/IPE-Quadrocopter/` —
+  enthält Kurs-Binärdateien, daher bewusst nicht im Repo.

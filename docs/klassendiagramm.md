@@ -283,7 +283,7 @@ classDiagram
 
 - **Trennung Kern / Adapter:** `QuadroControl.Core` kennt weder die Kurs-DLLs
   noch WPF — dadurch ist der Protokollkern unter Linux bauen- und testbar
-  (79 Unit-Tests). Die DLL-Aufrufe stecken ausschließlich in den beiden
+  (385 Unit-Tests). Die DLL-Aufrufe stecken ausschließlich in den beiden
   Transport-Adaptern (`VirtuellQuadroTransport`, `RealQuadroTransport`), die
   beide das schmale Interface `IQuadroTransport` erfüllen.
 - **Eine Logik, zwei Programme:** Beide `MainWindow`-Klassen nutzen denselben

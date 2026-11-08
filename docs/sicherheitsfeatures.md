@@ -92,15 +92,18 @@ rotes LED-Bild; die Farbe Rot trägt die Schrift — siehe ABWEICHUNGEN.md #11.)
 **Art:** Kein unbeabsichtigtes Arming (F3), Arming über GUI/Controller bedienbar (PROG-008A).
 
 **Implementierung:** `ArmingSequenz()` läuft nur im Zustand `HeartbeatActive`
-(sichert die Zustandsmaschine zusätzlich ab): 5× `ManualControlCommand` mit
+(sichert die Zustandsmaschine zusätzlich ab): 55× `ManualControlCommand` mit
 `Throttle = −1` **und** `Thrust = −1` (Abstand 50 ms), danach
-`AccessoryDesired = +1`. Disarming: `AccessoryDesired = −1` — nur im Zustand
+`AccessoryDesired = +1`, dann ein abschließender `ManualControlCommand(−1)`
+— die DLL puffert die letzten 50 Throttle-Werte und schaltet nur bei
+Summe −50 auf Armed (dekompiliert + live bestätigt 03.11.2026,
+ABWEICHUNGEN.md #17). Disarming: `AccessoryDesired = −1` — nur im Zustand
 `Armed`.
 
 **Verhalten:** Arming kann nur durch den ausdrücklichen Tastendruck A **nach**
 erfolgreichem Handshake erfolgen. Ein einzelner Zufalls-Stickstoß kann die
-Sequenz nicht auslösen (Taste A ist ein Button-Flag, kein Stickwert), und die
-Mehrfach-Schreibung folgt exakt der Vorgabe der VL5.
+Sequenz nicht auslösen (Taste A ist ein Button-Flag, kein Stickwert); das
+Mehrfach-Schreiben folgt dem verifizierten DLL-Kontrakt.
 
 ## 6. Sauberes Trennen und Fenster schließen (PROG-009, F3)
 
