@@ -171,3 +171,24 @@ Alle Phasen P0-P7 des BUILD-AUFTRAG.md abgeschlossen: komplette Solution mit Cor
   (b) Release-ZIP neu bauen + auf NC legen (QuadroControl-Release-2026-11-08.zip
   enthaelt noch die Mode-2-Builds von heute frueh), (c) Beleg-Kapitel C5 beim
   naechsten Doku-Lauf auf D3v2 stellen.
+
+## Azure-Blockade + Release D3v2 auf NC (08.11.2026, Abend-Session)
+
+- AZURE LOGIN POLICY-BLOCKIERT (AADSTS530035): Conditional Access verlangt nun
+  registrierte/Geraete-konforme Devices fuer ALLE Cloud-Apps (Azure CLI UND
+  Azure Portal getestet, beide abgewiesen, "Geraetestatus: Unregistered").
+  Zustand am 03.11. war noch offen; seit dieser Woche dicht. Kein CLI-, Browser-,
+  Device- oder Tenant-Flow funktioniert; siehe Skill azure-access (Stop-Regel).
+  Ein uebrig gebliebenes gueltiges ARM-Token gehoert zum falschen Issuer
+  (MSA-Verzeichnis), sieht keine Subscriptions — kein Bypass.
+- LIVE-TEST AUF AZURE DAHER NICHT GEFahren. Ausstehend, bis TUD/CA-Policy sich
+  aendert oder Simon sein Geraet registriert. 0 Ressourcen erzeugt, 0 Kosten.
+- RELEASE TROTZDEM GELIEFERT (Simons Entscheidung Option B): D3v2-Builds
+  (Release-Konfiguration) + aktualisierte ANLEITUNG (R2-Belegung) gepackt:
+  QuadroControl-Release-2026-11-08-D3v2.zip, 69.0 MB, 314 Eintraege,
+  kyrillisches Logo im Zip UTF-8 intakt. NC /IPE-Quadrocopter/, PUT 201,
+  GET byte-identisch (sha256 verifiziert). Das veraltete Mode-2-ZIP vom Morgen
+  (QuadroControl-Release-2026-11-08.zip) geloescht (NC-Papierkorb).
+- RUNTIME-VERIFIKATION OFFEN: 394/394 Unit-/Golden-Tests gruen decken die
+  Trigger-Skalierung und MCC-Bytes ab; der GUI-/Simulator-Lauf mit R2-Steuerung
+  fehlt noch (Simons PC oder spaetere Azure-Session).
