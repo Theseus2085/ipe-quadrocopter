@@ -192,3 +192,32 @@ Alle Phasen P0-P7 des BUILD-AUFTRAG.md abgeschlossen: komplette Solution mit Cor
 - RUNTIME-VERIFIKATION OFFEN: 394/394 Unit-/Golden-Tests gruen decken die
   Trigger-Skalierung und MCC-Bytes ab; der GUI-/Simulator-Lauf mit R2-Steuerung
   fehlt noch (Simons PC oder spaetere Azure-Session).
+
+## D3v2-Live-Test auf Azure-VM nachgeholt (08.11.2026, Nacht-Session)
+
+- AZURE LOGIN WIEDER MOEGLICH: CA-Policy entschaerft (Device-Flow durch,
+  Inkognito + Arbeitskonto). VM gestartet (neue Public IP nach
+  Deallocation-Zyklus, siehe lokales HANDOFF), HEAD-Builds (988facb) frisch
+  gebaut und deployed
+  (MD5 verifiziert): Solution Release-Build 0 Fehler, 394/394 Tests gruen.
+- LIVE-TEST VIRTUELL ERFOLGREICH (ganzer Zyklus, Screenshots rdp-Session):
+  COM3 verbinden -> 5-Nachrichten-Handshake -> "Handshake abgeschlossen,
+  Heartbeat aktiv (1/s)"; Arming per Fake-A=Taste (55x-MCC-Sequenz der App):
+  LED gruen, "Armed", Simulator-HUD gruen, Timer laeuft; R2=255 (RT in
+  ctrl.txt) -> Drohne steigt in Szene I Ebene: H 0.0m -> 77.4m (00:41) ->
+  0.3km (00:47) -> 0.5km (02:01, Deckel/Plateau); R2=0 -> Haelt 0.5km;
+  B-Taste -> "Disarmed", LED aus, HUD rot. R2-Anzeige in der GUI folgt
+  RT=0/255 live; Kanalzuordnung (LX=Yaw, RX=Roll, R2=Gas) stimmt.
+- HARNESS-LIMITIERUNG (fake XInput DLL, kein App-Bug): die DLL saettigt alle
+  Achsen digital - RT=128 -> GUI 255, LX=16384 -> 32767, RX=-9830 -> -32767.
+  Mittlere Trigger/Stick-Werte sind damit live NICHT darstellbar; analoge
+  Skalierung (Totzone 10, (t-10)/245) bleibt durch T8-Grenzwert-Tests
+  (394er-Suite) exakt abgedeckt. Quelle der DLL nicht mehr auf VM/Repo
+  (Tooling); bei Bedarf neu bauen mit analogen Durchgriff.
+- REAL-APP: nur Deploy verifiziert (exe+Core.dll MD5-identisch auf VM);
+  Runtime-Test weiterhin nur mit echtem FC an Simons PC (COM-Port).
+- AUFGRAEUMT: beide Prozesse per GUI-X geschlossen, ctrl.txt neutral,
+  VM dealloziert 23:12 UTC (Laufzeit ~2.6h ~ 14 Cent). NACHTBERICHT-Offen-
+  Punkte (a) erledigt, (b) war schon erledigt, (c) Beleg C5 bleibt Doku-Lauf.
+- GITHUB: Commit dieser Session gepusht (leak-scan siehe ABWEICHUNGEN-Logik,
+  0 Funde), remote == local verifiziert.
